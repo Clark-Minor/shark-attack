@@ -6,7 +6,34 @@ class Triangle extends Shape    // The simplest possible Shape – one triangle.
                                   // Next, supply vectors that point away from the triangle face.  They should match up with the points in 
                                   // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at 
                                   // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
-      this.positions      = [ Vec.of(0,0,0), Vec.of(1,0,0), Vec.of(0,1,0) ];
+      this.positions      = [ Vec.of(0,0,0), Vec.of(5,0,0), Vec.of(0,5,0) ];
+      this.normals        = [ Vec.of(0,0,1), Vec.of(0,0,1), Vec.of(0,0,1) ];
+      this.texture_coords = [ Vec.of(0,0),   Vec.of(1,0),   Vec.of(0,1)   ]; 
+      this.indices        = [ 0, 1, 2 ];                         // Index into our vertices to connect them into a whole triangle.
+                 // A position, normal, and texture coord fully describes one "vertex".  What's the "i"th vertex?  Simply the combined data 
+                 // you get if you look up index "i" of those lists above -- a position, normal vector, and tex coord together.  Lastly we
+                 // told it how to connect vertex entries into triangles.  Every three indices in "this.indices" traces out one triangle.
+    }
+}
+
+//**MY UPDATED TRIANGLE CLASS**//
+window.Triangle2 = window.classes.Triangle2 =
+class Triangle2 extends Shape    // The simplest possible Shape – one triangle.  It has 3 vertices, each
+{ constructor(x1, y1, z1, x2, y2, z2, x3, y3, z3)                 // having their own 3D position, normal vector, and texture-space coordinate.
+    { super( "positions", "normals", "texture_coords" );                       // Name the values we'll define per each vertex.
+                                  // First, specify the vertex positions -- the three point locations of an imaginary triangle.
+                                  // Next, supply vectors that point away from the triangle face.  They should match up with the points in 
+                                  // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at 
+                                  // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
+      var i;
+        function triangle_loop()
+        {
+          
+            return Vec.of(0,0,0);
+          
+        }
+      this.positions      = [ Vec.of(x1,y1,z1), Vec.of(x2, y2, z2), Vec.of(x3, y3, z3) ];
+      //this.colors = [ Color.of(1,1,1,1), Color.of(1,1,1,1),Color.of(1,1,1,1), ];
       this.normals        = [ Vec.of(0,0,1), Vec.of(0,0,1), Vec.of(0,0,1) ];
       this.texture_coords = [ Vec.of(0,0),   Vec.of(1,0),   Vec.of(0,1)   ]; 
       this.indices        = [ 0, 1, 2 ];                         // Index into our vertices to connect them into a whole triangle.

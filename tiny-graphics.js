@@ -586,7 +586,7 @@ class Scene_Component       // The Scene_Component superclass is the base class 
           this.shapes[s].copy_onto_graphics_card( canvas_manager.gl );
         }
     }                                                          // You have to override the following functions to use class Scene_Component.
-  make_control_panel(){}  display( graphics_state ){}  show_explanation( document_section ){}
+  make_control_panel(){}  display( graphics_state ){}  show_explanation( document_section ){}  
 }
 
 
