@@ -1,8 +1,8 @@
 window.Cube = window.classes.Cube =
 class Cube extends Shape    // A cube inserts six square strips into its arrays.
-{ constructor()  
+{ constructor()
     { super( "positions", "normals", "texture_coords" );
-      for( var i = 0; i < 3; i++ )                    
+      for( var i = 0; i < 3; i++ )
         for( var j = 0; j < 2; j++ )
         { var square_transform = Mat4.rotation( i == 0 ? Math.PI/2 : 0, Vec.of(1, 0, 0) )
                          .times( Mat4.rotation( Math.PI * j - ( i == 1 ? Math.PI/2 : 0 ), Vec.of( 0, 1, 0 ) ) )
@@ -18,16 +18,16 @@ window.Project_Scene = window.classes.Project_Scene =
 class Project_Scene extends Scene_Component
   { constructor( context, control_box, gl )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
-        if( !context.globals.has_controls   ) 
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) ); 
+        if( !context.globals.has_controls   )
+          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
 
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
         context.globals.graphics_state.camera_transform = Mat4.translation([ -5,-5,-70 ]);
-        
+
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
-        
+
 
         this.rows = 70;
         this.columns = 70;
@@ -36,7 +36,7 @@ class Project_Scene extends Scene_Component
         this.height = 20;
         this.Height_Map = [];
         this.time = 1;
-        
+
 //         //random z
 //         for(var i=0; i< this.rows; i++)
 //         {
@@ -44,14 +44,14 @@ class Project_Scene extends Scene_Component
 //           for(var j=0; j< this.columns; j++)
 //           {
 //             if(i>0 && i<this.rows-1 && j>0 && j<this.columns-1)
-//                 Row.push(3*Math.random());    
+//                 Row.push(3*Math.random());
 //             else
-//                 Row.push(0);       
+//                 Row.push(0);
 //           }
-//           this.Height_Map.push(Row);  
+//           this.Height_Map.push(Row);
 //         }
 
-    
+
 
         //PHASE SKETCH
         function flow_of_water(ttt)
@@ -63,14 +63,14 @@ class Project_Scene extends Scene_Component
               let phase = i * (2 * Math.PI / this.rows);
               let phase2 = j * (2 * Math.PI / this.columns);
               if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
-                  this.Height_Map[i][j] = 3*Math.random() - .05*Math.sin(phase + 4.5*ttt);                                                                  
-            }    
+                  this.Height_Map[i][j] = 3*Math.random() - .05*Math.sin(phase + 4.5*ttt);
+            }
         }
-      
+
 
         const shapes = { torus:  new Torus( 15, 15 ),
                          torus2: new ( Torus.prototype.make_flat_shaded_version() )( 15, 15 ),
- 
+
                          // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                          //        (Requirement 1)
                          triangle_for_water: new Triangle2(0,0,0, 1,0,0, 0,1,0),  //3 points
@@ -81,23 +81,25 @@ class Project_Scene extends Scene_Component
                          triangle_for_water6: new Triangle2(2,2,0, 1,1,0, 1,2,0),
                          triangle_for_water7: new Triangle2(1,2,0, 1,1,0, 0,2,0),
                          triangle_for_water8: new Triangle2(0,2,0, 0,1,0, 1,1,0),
-                         
+
                          water: new Water(this.rows, this.columns, this.width, this.length, this.Height_Map),
                          tank: new Body_Of_Water(),
                          skybox: new Cube(),
+                         octopus: new Octopus(),
+                         //octpus_legs: new Leg(),
                         }
 
-       
-        this.submit_shapes( context, shapes );                             
-        
+
+        this.submit_shapes( context, shapes );
+
         // Make some Material objects available to you:
         this.materials =
-          { water_material:     context.get_instance( Phong_Shader ).material(Color.of( 36/255, 171/255, 255/255, 0.6 ), 
-            { 
+          { water_material:     context.get_instance( Phong_Shader ).material(Color.of( 36/255, 171/255, 255/255, 0.6 ),
+            {
               ambient: 0.6,
               diffusivity: 0.1,
               specular: 0.5,
-              smoothness: 80   //fuck is the difference??? 
+              smoothness: 80   //fuck is the difference???
             }),
             ring:     context.get_instance( Ring_Shader  ).material(),
 
@@ -105,14 +107,20 @@ class Project_Scene extends Scene_Component
             {
                 ambient: 1,  //ambient coefficient 1
                 texture: context.get_instance("assets/skysky.png", true) //true = trilinear filtering
-            })       
+            }),
+            octopus_skin: context.get_instance( Phong_Shader ).material(Color.of(204/255,0,170/255,1),
+            {
+                ambient: 1,  //ambient coefficient 1
+                //diffusivity: 1,
+                specular: 0.5,
+            })
           }
 
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
-        
+
 
       } //end of constructor
-    
+
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
       { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
         this.new_line();
@@ -129,7 +137,7 @@ class Project_Scene extends Scene_Component
       { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
         this.time = t;
-        
+
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
 
@@ -141,35 +149,25 @@ class Project_Scene extends Scene_Component
         this.shapes.triangle_for_water5.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(1,0,0,1)}) );
         this.shapes.triangle_for_water6.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(0,0,1,1)}) );
         this.shapes.triangle_for_water7.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(1,0,0,1)}) );
-        this.shapes.triangle_for_water8.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(1,1,0,1)}) );      
-        
+        this.shapes.triangle_for_water8.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(1,1,0,1)}) );
+
         //this.flow_of_water(this.time);
 
-        //this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([100,100,100])), this.materials.box_texture);
+        this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([100,100,100])), this.materials.box_texture);
 
         //from surfaces_demo
         const random = ( x ) => Math.sin( 1000*x + graphics_state.animation_time/1000 );
         //console.log(graphics_state.animation_time)
-        this.shapes.water.positions.forEach( (p,i,a) => 
+        this.shapes.water.positions.forEach( (p,i,a) =>
                         a[i] = Vec.of( p[0], p[1], 5 ) );
 //         this.shapes.water.positions.forEach(p => p[2] = .5 )
-        
 
-          for(var i = 0; i < this.rows; i++)
-            for(var j = 0; j < this.columns; j++)
-            {
 
-              let phase = i * (2 * Math.PI / this.rows);
-              let phase2 = j * (2 * Math.PI / this.columns);
-              if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
-                  this.shapes.water.positions = 3*Math.random() - .05*Math.sin(phase + 4.5*t);                                                                  
-            }    
-
-        //CREATE NEW WATER SHAPE 
-        this.shapes.water = new Water(this.rows, this.columns, this.width, this.length, this.Height_Map);  
+        //CREATE NEW WATER SHAPE
+        //this.shapes.water = new Water(this.rows, this.columns, this.width, this.length, this.Height_Map);
         //this.shapes.water.send_water(this.gl);
 
-        
+
         //ours
         let water_transform = Mat4.identity().times( Mat4.translation([0, 0, 0]) ); //make whole surface go up and down
         this.shapes.water.draw(graphics_state, water_transform, this.materials.water_material);
@@ -177,28 +175,30 @@ class Project_Scene extends Scene_Component
 
 
 
-        
+
         let tank_transform = Mat4.identity().times(Mat4.translation([this.width/2, this.length/2, -this.height/2]))
                                             .times(Mat4.scale([this.width/2, this.length/2, -this.height/2]));
         this.shapes.tank.draw(graphics_state, tank_transform, this.materials.water_material);
+
+        this.shapes.octopus.draw(graphics_state, Mat4.identity(), this.materials.octopus_skin);
       }
 
-      
+
   }
 
 //SURFACE OF WATER//
 window.Water = window.classes.Water =
-class Water extends Shape    
-{ constructor(rows, columns, width, length, heightmap)      
-     {        
+class Water extends Shape
+{ constructor(rows, columns, width, length, heightmap)
+     {
        super( "positions", "normals" );
        this.positions = [];
        this.normals = [];
-       this.indices = []; 
-      
-       //basically creates a matrix[r][c] that stores the positions of vertices, 
-       //r*c = # of vertices over the span of length and width 
-       for(var i = 0; i < rows; i++)    
+       this.indices = [];
+
+       //basically creates a matrix[r][c] that stores the positions of vertices,
+       //r*c = # of vertices over the span of length and width
+       for(var i = 0; i < rows; i++)
        {
           let x = i * width / (rows-1);
 
@@ -206,44 +206,45 @@ class Water extends Shape
           {
             let y = j * length / (columns-1);
             this.positions.push( Vec.of(x, y, random_height(0,3))); //random z vertex so surface of water not so uniform waves
-            this.normals.push(Vec.of(0, 0, 1));         
+            this.normals.push(Vec.of(0, 0, 1));
           }
         }
-        
+
         //drawing triangles with the vertices(positions) we got above
         for(var i=0; i < rows - 1; i++)
         {
             if(i % 2 == 0)
             for(var x = i * columns; x < (i+1) * columns - 1; x++)
             {
-                  this.indices.push(x, x+1, x+columns, x+columns, x+1, x+columns+1);            
+                  this.indices.push(x, x+1, x+columns, x+columns, x+1, x+columns+1);
             }
 
-            else 
+            else
             for(var x = (i+1) * columns - 2; x >= i * columns; x--)
             {
-                  this.indices.push(x, x+1, x+columns+1, x, x+columns+1, x+columns);         
-            }   
+                  this.indices.push(x, x+1, x+columns+1, x, x+columns+1, x+columns);
+            }
         }
 
         //randomize z coordinate of water for every vertex we have
-        function random_height(min, max) 
+        function random_height(min, max)
         {
           if(i > 0 && i < rows-1 && j > 0 && j < columns-1)
             return Math.random() * (max - min) + min;
           else
             return 0;
         }
-                                
+
      }//end of constructor
-  
+
      send_water(gl)
      {
-         this.copy_onto_graphics_card(gl, ["positions", "normals"], false);  
+         this.copy_onto_graphics_card(gl, ["positions", "normals"], false);
      }
 
 
 }
+
 
 
 window.Body_Of_Water = window.classes.Body_Of_Water =
@@ -266,12 +267,58 @@ class Body_Of_Water extends Shape
                  // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
                  // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
         this.indices.push( 0, 1, 2, 1, 3, 2,        //without top part / "lid"
-                           8, 9, 10, 9, 11, 10, 
-                           12, 13, 14, 13, 15, 14, 
-                           16, 17, 18, 17, 19, 18, 
+                           8, 9, 10, 9, 11, 10,
+                           12, 13, 14, 13, 15, 14,
+                           16, 17, 18, 17, 19, 18,
                            20, 21, 22, 21, 23, 22);
         // It stinks to manage arrays this big.  Later we'll show code that generates these same cube vertices more automatically.
       }
+}
+
+window.Octopus = window.classes.Octopus =
+class Octopus extends Shape    // The simplest possible Shape – one triangle.  It has 3 vertices, each
+{ constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
+    { super( "positions", "normals", "texture_coords" );                       // Name the values we'll define per each vertex.
+                                  // First, specify the vertex positions -- the three point locations of an imaginary triangle.
+                                  // Next, supply vectors that point away from the triangle face.  They should match up with the points in
+                                  // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at
+                                  // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
+      var head_t = Mat4.identity().times(Mat4.scale([3,3,3]))
+      var eye_1_t = Mat4.identity().times(Mat4.scale([.5,.5,.5]))
+      eye_1_t = eye_1_t.times(Mat4.translation(Vec.of(0,3,0)))
+      var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(1,0,0)))
+      var leg_1_t = Mat4.identity().times(Mat4.translation(Vec.of(-2,0,-1.5)))
+      leg_1_t = leg_1_t.times(Mat4.rotation(Math.PI/2,Vec.of(1,0,0)))
+      var leg_2_t = leg_1_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_2_t = leg_2_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+      var leg_3_t = leg_2_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_3_t = leg_3_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+      var leg_4_t = leg_3_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_4_t = leg_4_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+      var leg_5_t = leg_4_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_5_t = leg_5_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+      var leg_6_t = leg_5_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_6_t = leg_6_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+      var leg_7_t = leg_6_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_7_t = leg_7_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+      var leg_8_t = leg_7_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
+      leg_8_t = leg_8_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
+
+      Subdivision_Sphere.insert_transformed_copy_into(this, [2], head_t)
+      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t)
+      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_1_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_2_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_3_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_4_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_5_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_6_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_7_t)
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_8_t)            // Index into our vertices to connect them into a whole triangle.
+                 // A position, normal, and texture coord fully describes one "vertex".  What's the "i"th vertex?  Simply the combined data
+                 // you get if you look up index "i" of those lists above -- a position, normal vector, and tex coord together.  Lastly we
+                 // told it how to connect vertex entries into triangles.  Every three indices in "this.indices" traces out one triangle.
+    }
 }
 
 
@@ -284,10 +331,10 @@ class Ring_Shader extends Shader              // Subclasses of Shader each store
 { material() { return { shader: this } }      // Materials here are minimal, without any settings.
   map_attribute_name_to_buffer_name( name )       // The shader will pull single entries out of the vertex arrays, by their data fields'
     {                                             // names.  Map those names onto the arrays we'll pull them from.  This determines
-                                                  // which kinds of Shapes this Shader is compatible with.  Thanks to this function, 
-                                                  // Vertex buffers in the GPU can get their pointers matched up with pointers to 
+                                                  // which kinds of Shapes this Shader is compatible with.  Thanks to this function,
+                                                  // Vertex buffers in the GPU can get their pointers matched up with pointers to
                                                   // attribute names in the GPU.  Shapes and Shaders can still be compatible even
-                                                  // if some vertex data feilds are unused. 
+                                                  // if some vertex data feilds are unused.
       return { object_space_pos: "positions" }[ name ];      // Use a simple lookup table.
     }
     // Define how to synchronize our JavaScript's variables to the GPU's:
@@ -310,22 +357,22 @@ class Ring_Shader extends Shader              // Subclasses of Shader each store
         uniform mat4 projection_camera_transform;
 
         void main()
-        { 
+        {
         }`;           // TODO:  Complete the main function of the vertex shader (Extra Credit Part II).
     }
   fragment_glsl_code()           // ********* FRAGMENT SHADER *********
     { return `
         void main()
-        { 
+        {
         }`;           // TODO:  Complete the main function of the fragment shader (Extra Credit Part II).
     }
 }
 
 window.Grid_Sphere = window.classes.Grid_Sphere =
-class Grid_Sphere extends Shape           // With lattitude / longitude divisions; this means singularities are at 
+class Grid_Sphere extends Shape           // With lattitude / longitude divisions; this means singularities are at
   { constructor( rows, columns, texture_range )             // the mesh's top and bottom.  Subdivision_Sphere is a better alternative.
       { super( "positions", "normals", "texture_coords" );
-        
+
 
                       // TODO:  Complete the specification of a sphere with lattitude and longitude lines
                       //        (Extra Credit Part III)
@@ -376,7 +423,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //       }
 //   }
 
-// window.Tank_Opaque = window.classes.Tank_Opaque = 
+// window.Tank_Opaque = window.classes.Tank_Opaque =
 // class Tank_Opaque extends Shape
 // {
 //     constructor()
@@ -427,9 +474,9 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // }
 
 // window.Square = window.classes.Square =
-// class Square extends Shape              // A square, demonstrating two triangles that share vertices.  On any planar surface, the interior 
+// class Square extends Shape              // A square, demonstrating two triangles that share vertices.  On any planar surface, the interior
 //                                         // edges don't make any important seams.  In these cases there's no reason not to re-use data of
-// {                                       // the common vertices between triangles.  This makes all the vertex arrays (position, normals, 
+// {                                       // the common vertices between triangles.  This makes all the vertex arrays (position, normals,
 //   constructor(zoom=1)                         // etc) smaller and more cache friendly.
 //     { super( "positions", "normals", "texture_coords" );                                   // Name the values we'll define per each vertex.
 //       this.positions     .push( ...Vec.cast( [-1,-1,-1], [1,-1,-1], [-1,-1,1], [1,-1,1] ) );   // Specify the 4 square corner locations.
@@ -440,21 +487,21 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // }
 
 // /*SHAPES FOR SHARK*/
-// window.Shark = window.classes.Shark = 
+// window.Shark = window.classes.Shark =
 // class Shark extends Shape
 // {
 //     constructor(){
-//         super( "positions", "normals", "texture_coords" );       
+//         super( "positions", "normals", "texture_coords" );
 //         let triangle_transform = Mat4.identity().times(Mat4.translation([-0.5,0.25,0])).times(Mat4.scale([2,2,2]));;
 //         let sphere_transform = Mat4.identity().times(Mat4.translation([0,0.25,0])).times(Mat4.scale([2,0.6,1]));
 //         Triangle.insert_transformed_copy_into( this, [4], triangle_transform);
-//         Subdivision_Sphere.insert_transformed_copy_into( this, [4], sphere_transform);   
+//         Subdivision_Sphere.insert_transformed_copy_into( this, [4], sphere_transform);
 //     }
 // }
 
 // /*SHAPES FOR RUBBER DUCK*/
 
-// window.DuckBody = window.classes.DuckBody = 
+// window.DuckBody = window.classes.DuckBody =
 // class DuckBody extends Shape
 // {
 //     constructor()
@@ -477,7 +524,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         super( "positions", "normals", "texture_coords" );
 //         var cone_transform = Mat4.identity().times(Mat4.rotation(-Math.PI/2,Vec.of(0,1,0))).times(Mat4.translation([0,2,3])).times(Mat4.rotation(-Math.PI/6,Vec.of(1,0,0))).times(Mat4.scale([1,0.75,0.75]));
 //         Cone_Tip.insert_transformed_copy_into( this, [15,15], cone_transform );
-//     }    
+//     }
 // }
 
 // /* SHAPES FOR CANNON */
@@ -488,7 +535,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         super( "positions", "normals", "texture_coords" );
 //         var cylinder_transform = Mat4.identity().times(Mat4.rotation(Math.PI/3,Vec.of(-1,0,0))).times(Mat4.scale([1.5,1.5,9])).times(Mat4.rotation(Math.PI,Vec.of(1,0,0)));
 //         Cylindrical_Tube.insert_transformed_copy_into( this, [15,15], cylinder_transform)
-//     }    
+//     }
 // }
 
 // class CannonBase extends Shape
@@ -498,7 +545,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         super( "positions", "normals", "texture_coords" );
 //         var sphere_transform = Mat4.identity().times(Mat4.rotation(Math.PI/3,Vec.of(-1,0,0))).times(Mat4.scale([2.25,2.25,3.5])).times(Mat4.rotation(Math.PI,Vec.of(1,0,0))).times(Mat4.translation([0,0,0.8]));
 //         Subdivision_Sphere.insert_transformed_copy_into( this, [4], sphere_transform)
-//     }    
+//     }
 // }
 
 // class CannonWheels extends Shape
@@ -515,22 +562,22 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // }
 
 // class Texture_Caustic extends Phong_Shader
-// { fragment_glsl_code()           // ********* FRAGMENT SHADER ********* 
+// { fragment_glsl_code()           // ********* FRAGMENT SHADER *********
 //     {
 //       // TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
 //       return `
 //         uniform sampler2D texture;
 //         void main()
 //         { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-//           { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.            
+//           { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
 //             return;
 //           }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
 //                                             // Phong shading is not to be confused with the Phong Reflection Model.
-   
+
 //           vec4 tex_color = texture2D( texture, f_tex_coord);                         // Sample the texture image in the correct place.
 //           vec3 bumped_N = normalize( N + tex_color.rgb - 0.5 * vec3(1,1,1) );
 //                                                                                      // Compute an initial (ambient) color:
-//           if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w ); 
+//           if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
 //           else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
 //           gl_FragColor.xyz += phong_model_lights( bumped_N );                     // Compute the final color with contributions from lights.
 //         }`;
@@ -545,23 +592,23 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         //  TODO (Requirement 5).
 //                                 // When a set of lines is used in graphics, you should think of the list entries as
 //                                 // broken down into pairs; each pair of vertices will be drawn as a line segment.
-        
+
 //         // First, specify the vertex positions -- just a bunch of points that exist at the corners of an imaginary cube.
-//         this.positions.push( ...Vec.cast( [-1,-1,-1], [1,-1,-1], 
-//                                           [1,-1,-1], [1,-1,1], 
-//                                           [1,-1,1],  [-1,-1,1],  
+//         this.positions.push( ...Vec.cast( [-1,-1,-1], [1,-1,-1],
+//                                           [1,-1,-1], [1,-1,1],
+//                                           [1,-1,1],  [-1,-1,1],
 //                                           [-1,-1,1],  [-1,-1,-1], // Bottom 4
 
-//                                           [-1,1,-1], [1,1,-1], 
-//                                           [1,1,-1], [1,1,1], 
-//                                           [1,1,1],  [-1,1,1],  
+//                                           [-1,1,-1], [1,1,-1],
+//                                           [1,1,-1], [1,1,1],
+//                                           [1,1,1],  [-1,1,1],
 //                                           [-1,1,1],  [-1,1,-1], // Top 4
-                                          
-//                                           [-1,-1,-1],  [-1,1,-1],  
-//                                           [1,-1,-1],  [1,1,-1], 
-//                                           [1,-1,1], [1,1,1], 
+
+//                                           [-1,-1,-1],  [-1,1,-1],
+//                                           [1,-1,-1],  [1,1,-1],
+//                                           [1,-1,1], [1,1,1],
 //                                           [-1,-1,1], [-1,1,1] ) ); //Vertical 4
-  
+
 //        this.colors = [Color.of( 1,1,1,1 ),  Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ),
 //         Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ),
 //          Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ), Color.of( 1,1,1,1 ),
@@ -584,61 +631,61 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 // window.Water = window.classes.Water =
-// class Water extends Shape    
-// { constructor(rows, columns, width, length, Height_Map)      
-//       {       
+// class Water extends Shape
+// { constructor(rows, columns, width, length, Height_Map)
+//       {
 //         let positions = [];
 //         let normals = [];
-//         let indices = []; 
+//         let indices = [];
 
-        
+
 //        for(var i=0; i< rows; i++){
 //           let x = i*width/(rows-1);
 //           for(var j=0; j< columns; j++){
 //             let y = j*length/(columns-1);
-//             positions.push(Vec.of(x,Height_Map[i][j],y)); 
-//             normals.push(Vec.of(0,1,0));         
+//             positions.push(Vec.of(x,Height_Map[i][j],y));
+//             normals.push(Vec.of(0,1,0));
 //           }
 //         }
 
 //         for(var i=0; i< rows - 1; i++){
 //             if(i%2==0)
 //             for(var x=i*columns; x< (i+1)*columns - 1; x++){
-//                   indices.push(x,x+1,x+columns,x+columns,x+1,x+columns+1);     
+//                   indices.push(x,x+1,x+columns,x+columns,x+1,x+columns+1);
 
-//                   //x = x + this.columns;     
+//                   //x = x + this.columns;
 //             }
-//             else 
+//             else
 //             for(var x= (i+1)*columns - 2; x >= i*columns; x--){
-//                   indices.push(x,x+1,x+columns+1,x,x+columns+1,x+columns);     
+//                   indices.push(x,x+1,x+columns+1,x,x+columns+1,x+columns);
 
-//                   //x = x + this.columns;     
-//             }   
-//         }                        
+//                   //x = x + this.columns;
+//             }
+//         }
 
 //       super( "positions", "normals" );
 //        this.positions = positions;
 //        this.normals = normals;
 //        this.indices = indices;
 //      }
-  
+
 //      send_water(gl)
 //      {
-//          this.copy_onto_graphics_card(gl, ["positions", "normals"], false);  
+//          this.copy_onto_graphics_card(gl, ["positions", "normals"], false);
 //      }
 
 // }
 
 
-// // //This class should be done in terms of coordinates, not indices, because y coordinates do not have indices 
+// // //This class should be done in terms of coordinates, not indices, because y coordinates do not have indices
 // // class cannonBall    //This is only used to get the coordinates of the cannon ball in every frame.
 // // {
-// //   constructor(start_pos, end_pos, timeDuration, xUpperBound, zUpperBound, yLowerBound, model_transform, initialTime) 
+// //   constructor(start_pos, end_pos, timeDuration, xUpperBound, zUpperBound, yLowerBound, model_transform, initialTime)
 // //   {
 // //     this.initialTime = initialTime;
-// //     this.x_coord = this.x_coord_initial = start_pos[0]; 
+// //     this.x_coord = this.x_coord_initial = start_pos[0];
 // //     this.z_coord = this.z_coord_initial = start_pos[2];
-// //     this.y_coord = this.y_coord_initial = start_pos[1]; 
+// //     this.y_coord = this.y_coord_initial = start_pos[1];
 // //     this.xUpperBound = xUpperBound;
 // //     this.zUpperBound = zUpperBound;
 // //     this.yLowerBound = yLowerBound;
@@ -649,27 +696,27 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // //     this.cannonBall_transform = model_transform.times(Mat4.translation([start_pos[0], start_pos[1], start_pos[2]])).times(Mat4.scale([1,1,1])); //SCALE LATER
 // //     this.airTimeDuration = 0;
 
-// //     this.xVelocity = (end_pos[0] - start_pos[0])/timeDuration; 
-// //     this.zVelocity = (end_pos[2] - start_pos[2])/timeDuration; 
+// //     this.xVelocity = (end_pos[0] - start_pos[0])/timeDuration;
+// //     this.zVelocity = (end_pos[2] - start_pos[2])/timeDuration;
 
 // //     this.waterContactTime = 0;
 // //     this.xVelocity_underwater = 0;
-// //     this.zVelocity_underwater = 0; 
-// //     this.yVelocity_underwater = 0; 
+// //     this.zVelocity_underwater = 0;
+// //     this.yVelocity_underwater = 0;
 // //     this.x_coord_waterContact = 0;
 // //     this.z_coord_waterContact = 0;
 // //     this.y_coord_waterContact = 0;  //Used to find precise contact height because y==0 happens between frames.
 // //     this.transitioningToUnderwater = true;
 
 // //     this.gravAccel = -17.5;
-// //     let totalHeightChange = end_pos[1] - start_pos[1]; 
+// //     let totalHeightChange = end_pos[1] - start_pos[1];
 // //     this.yVelocity = this.yVelocity_initial = totalHeightChange/timeDuration - (this.gravAccel/2)*timeDuration;
 // //   }
 
 // // possibleBounceOffWall()
 // // {
 // //     if (this.x_coord < 0)
-// //    { 
+// //    {
 // //         this.x_coord = 0;
 // //         this.xVelocity_underwater *= -1;
 // //    }
@@ -679,7 +726,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // //         this.xVelocity_underwater *= -1;
 // //    }
 // //        if (this.z_coord < 0)
-// //    { 
+// //    {
 // //         this.z_coord = 0;
 // //         this.zVelocity_underwater *= -1;
 // //    }
@@ -701,12 +748,12 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 // //  veloAndPosUpdate (t)
-// //     {  
+// //     {
 
 
 // //       let elapsedTime = t - this.initialTime;
 // //       this.possibleBounceOffWall();
-      
+
 // //         if(this.y_coord>=0)
 // //         {
 // //           let new_x = this.x_coord_initial + this.xVelocity * elapsedTime;
@@ -721,7 +768,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 // //           this.x_coord = new_x;
-// //           this.y_coord = new_y; 
+// //           this.y_coord = new_y;
 // //           this.z_coord = new_z;
 // //         }
 // //         else
@@ -738,10 +785,10 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // //                 this.z_coord_waterContact = this.z_coord;
 // //                 this.y_coord_waterContact = this.y_coord;
 // //             }
-          
+
 // //           let dt = 1/10;
 // //           let fastestSink = -30;
-// //           let hardFloor = true; //Hardcode depending on if the floor shoul act like sand or acting like concrete 
+// //           let hardFloor = true; //Hardcode depending on if the floor shoul act like sand or acting like concrete
 
 // //           if(Math.abs(this.xVelocity_underwater)>.4||Math.abs(this.zVelocity_underwater)>.4)
 // //           {
@@ -750,13 +797,13 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // //           if(this.yVelocity_underwater<fastestSink)
 // //           this.yVelocity_underwater *= .98;
 // //           }
-// //           else 
+// //           else
 // //           this.xVelocity_underwater = this.zVelocity_underwater = 0;
-          
+
 // //            if (hardFloor && this.y_coord < this.yLowerBound)
 // //               this.yVelocity_underwater *= .3;
 // //            else if (this.y_coord < this.yLowerBound)
-// //               this.yVelocity_underwater *= .98; 
+// //               this.yVelocity_underwater *= .98;
 
 // //           let new_x = this.x_coord + this.xVelocity_underwater*dt;
 // //           let new_z = this.z_coord + this.zVelocity_underwater*dt;
@@ -767,9 +814,9 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 // //           this.x_coord = new_x;
-// //           this.y_coord = new_y; 
+// //           this.y_coord = new_y;
 // //           this.z_coord = new_z;
-// //         }   
+// //         }
 // //     }
 // // }
 
@@ -779,15 +826,15 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// //This class should be done in terms of coordinates, not indices, because y coordinates do not have indices 
+// //This class should be done in terms of coordinates, not indices, because y coordinates do not have indices
 // class cannonBall    //This is only used to get the coordinates of the cannon ball in every frame.
 // {
-//   constructor(start_pos, end_pos, timeDuration, xUpperBound, zUpperBound, yLowerBound, model_transform, initialTime) 
+//   constructor(start_pos, end_pos, timeDuration, xUpperBound, zUpperBound, yLowerBound, model_transform, initialTime)
 //   {
 //     this.initialTime = initialTime;
-//     this.x_coord = this.x_coord_initial = start_pos[0]; 
+//     this.x_coord = this.x_coord_initial = start_pos[0];
 //     this.z_coord = this.z_coord_initial = start_pos[2];
-//     this.y_coord = this.y_coord_initial = start_pos[1]; 
+//     this.y_coord = this.y_coord_initial = start_pos[1];
 //     this.xUpperBound = xUpperBound;
 //     this.zUpperBound = zUpperBound;
 //     this.yLowerBound = yLowerBound;
@@ -802,20 +849,20 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //     this.cannonBall_transform = model_transform.times(Mat4.translation([start_pos[0], start_pos[1], start_pos[2]])).times(Mat4.scale([1,1,1])); //SCALE LATER
 //     this.airTimeDuration = 0;
 
-//     this.xVelocity = (end_pos[0] - start_pos[0])/timeDuration; 
-//     this.zVelocity = (end_pos[2] - start_pos[2])/timeDuration; 
+//     this.xVelocity = (end_pos[0] - start_pos[0])/timeDuration;
+//     this.zVelocity = (end_pos[2] - start_pos[2])/timeDuration;
 
 //     this.waterContactTime = 0;
 //     this.xVelocity_underwater = 0;
-//     this.zVelocity_underwater = 0; 
-//     this.yVelocity_underwater = 0; 
+//     this.zVelocity_underwater = 0;
+//     this.yVelocity_underwater = 0;
 //     this.x_coord_waterContact = 0;
 //     this.z_coord_waterContact = 0;
 //     this.y_coord_waterContact = 0;  //Used to find precise contact height because y==0 happens between frames.
 //     this.transitioningToUnderwater = true;
 
 //     this.gravAccel = -17.5;
-//     let totalHeightChange = end_pos[1] - start_pos[1]; 
+//     let totalHeightChange = end_pos[1] - start_pos[1];
 //     this.yVelocity = this.yVelocity_initial = totalHeightChange/timeDuration - (this.gravAccel/2)*timeDuration;
 //   }
 
@@ -825,7 +872,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //     return;
 
 //     if (this.x_coord < 1)
-//    { 
+//    {
 //         this.x_coord = 0;
 //         this.xVelocity_underwater *= -1;
 //         this.xVelocity_afterBounce = -this.xVelocity;
@@ -843,7 +890,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         this.hasBouncedOffWall = true;
 //    }
 //        if (this.z_coord < 1)
-//    { 
+//    {
 //         this.z_coord = 0;
 //         this.zVelocity_underwater *= -1;
 //         this.zVelocity_afterBounce = -this.zVelocity;
@@ -856,7 +903,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         this.z_coord = this.zUpperBound;
 //         this.zVelocity_underwater *= -1;
 //         this.zVelocity_afterBounce = -this.zVelocity;
-//         this.xVelocity_afterBounce = this.xVelocity;    
+//         this.xVelocity_afterBounce = this.xVelocity;
 //         this.bounceTime = elapsedTime;
 //         this.hasBouncedOffWall = true;
 //    }
@@ -873,18 +920,18 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 //  veloAndPosUpdate (t)
-//     {  
+//     {
 
 
 //       let elapsedTime = t - this.initialTime;
 //       this.possibleBounceOffWall(elapsedTime);
-      
+
 //         if(this.y_coord>=0)
 //         {
 //           let new_x = 0;        //defined here because JS requires, won't allow definition in the if and else.
 //           let new_z = 0;
 //           let new_y = 0;
-          
+
 //           if (!this.hasBouncedOffWall&& elapsedTime>=2) //USE THIS ONE FOR TESTING THE WEIRD OUT OF BOUNDS BEHAVIOR
 //           {
 //                new_x = this.x_coord_initial + this.xVelocity * elapsedTime;
@@ -896,9 +943,9 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 //                new_z = this.z_coord_initial + this.zVelocity * elapsedTime;
 //           }
-//           else 
+//           else
 //           {
-//               if (this.x_coord==0)      ///WHAT THE FUUUUUUUUCK IS HAPPENING 
+//               if (this.x_coord==0)      ///WHAT THE FUUUUUUUUCK IS HAPPENING
 //               new_x = 10;
 //               else if (this.x_coord==this.xUpperBound)
 //               new_x = this.xUpperBound - 10;
@@ -921,7 +968,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 //           this.x_coord = new_x;
-//           this.y_coord = new_y; 
+//           this.y_coord = new_y;
 //           this.z_coord = new_z;
 //         }
 //         else
@@ -945,10 +992,10 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //                 this.z_coord_waterContact = this.z_coord;
 //                 this.y_coord_waterContact = this.y_coord;
 //             }
-          
+
 //           let dt = 1/10;
 //           let fastestSink = -30;
-//           let hardFloor = true; //Hardcode depending on if the floor shoul act like sand or acting like concrete 
+//           let hardFloor = true; //Hardcode depending on if the floor shoul act like sand or acting like concrete
 
 //           if(Math.abs(this.xVelocity_underwater)>.4||Math.abs(this.zVelocity_underwater)>.4)
 //           {
@@ -957,13 +1004,13 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //           if(this.yVelocity_underwater<fastestSink)
 //           this.yVelocity_underwater *= .98;
 //           }
-//           else 
+//           else
 //           this.xVelocity_underwater = this.zVelocity_underwater = 0;
-          
+
 //            if (hardFloor && this.y_coord < this.yLowerBound)
 //               this.yVelocity_underwater *= .3;
 //            else if (this.y_coord < this.yLowerBound)
-//               this.yVelocity_underwater *= .98; 
+//               this.yVelocity_underwater *= .98;
 
 //           let new_x = this.x_coord + this.xVelocity_underwater*dt;
 //           let new_z = this.z_coord + this.zVelocity_underwater*dt;
@@ -974,9 +1021,9 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 
 //           this.x_coord = new_x;
-//           this.y_coord = new_y; 
+//           this.y_coord = new_y;
 //           this.z_coord = new_z;
-//         }   
+//         }
 //     }
 // }
 
@@ -988,39 +1035,39 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
 //         //if( !context.globals.has_controls   )
 //           //context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() , text_canvas) );
- 
+
 //         const r = context.width/context.height;  //5 -10 -30
 
-//         this.camera_pos = Vec.of(-5, 10, 30); //camera pos in world coord -- hardcoded for now 
+//         this.camera_pos = Vec.of(-5, 10, 30); //camera pos in world coord -- hardcoded for now
 
 //         context.globals.graphics_state.    camera_transform = Mat4.translation([ 5, -10, -30 ]);  // Locate the camera here (inverted matrix).
 //         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
-        
+
 //         this.proj_tr = context.globals.graphics_state.projection_transform;
 //         this.cam_tr = context.globals.graphics_state.    camera_transform;
 
 //         this.model_transform = Mat4.identity().times(Mat4.scale([0.25,0.25,0.25]))
 //                        .times(Mat4.rotation(Math.PI/4,Vec.of(1,0,0)))
 //                        .times(Mat4.rotation(-Math.PI/4,Vec.of(0,1,0)))
-//                        .times(Mat4.translation([-95,30,-60]));        
+//                        .times(Mat4.translation([-95,30,-60]));
 
 //         this.inv_modl_tr = Mat4.inverse(this.model_transform);
 //         this.inv_cam_tr = Mat4.inverse(this.cam_tr);
-//         this.inv_proj_tr = Mat4.inverse(this.proj_tr); 
+//         this.inv_proj_tr = Mat4.inverse(this.proj_tr);
 
 //         this.gl = gl;
-        
+
 //         //this.ctx_2d = text_canvas.getContext("2d");
 //         this.ctx_drawn = false;
 //                                      // Make some Material objects available to you:
 //         this.clay   = context.get_instance( Phong_Shader ).material( Color.of( .9,.5,.9, 1 ), { ambient: .4, diffusivity: .4 } );
 //         this.white  = context.get_instance( Phong_Shader ).material();
 //         this.plastic = this.clay.override({ specularity: .6 });
-        
+
 
 //         this.m_water = context.get_instance( Phong_Shader ).material( Color.of (0.0, 0.7, 1.0, 0.6), {ambient: 0.6, diffusivity: 1, specularity:0.5});
 //         this.m_tank = context.get_instance( Phong_Shader ).material( Color.of (0, 0, 1, 0.9), {ambient: 0.6, diffusivity: 0.1, specularity:0.5});
-//         this.m_tank_opaque = context.get_instance( Phong_Shader ).material( Color.of (0, 0, 1, 1), {ambient: 0.6, diffusivity: 0.1, specularity:0.5});        
+//         this.m_tank_opaque = context.get_instance( Phong_Shader ).material( Color.of (0, 0, 1, 1), {ambient: 0.6, diffusivity: 0.1, specularity:0.5});
 //         this.m_floor = context.get_instance( Texture_Caustic ).material( Color.of( 0,0,0,1 ), {ambient: 1, texture: context.get_instance("assets/floor.jpg", false)} );
 //         this.m_wall1 = context.get_instance( Texture_Caustic ).material( Color.of( 0,0,0,1 ), {ambient: 0.9,texture: context.get_instance("assets/sky.jpg", false)} );
 //         this.m_wall2 = context.get_instance( Texture_Caustic ).material( Color.of( 0,0,0,1 ), {ambient: 1,texture: context.get_instance("assets/sky.jpg", false)} );
@@ -1035,7 +1082,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         //this.m_cannonBall = context.get_instance( Phong_Shader ).material( Color.of (0.46, 0.46, 0.46, 1.0), {ambient: 0.5, diffusivity: 0.3, specularity:0.5});
 //         this.m_cannonBall = context.get_instance( Phong_Shader ).material( Color.of (1, 0, 0, 1.0), {ambient: 0.5, diffusivity: 0.3, specularity:0.5});
 
-        
+
 //         this.caustic_counter = 0;
 //         this.caustic_update = true;
 
@@ -1046,7 +1093,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         this.Swaying = true;
 //         this.Outline = false;
 //         this.Color_Array;
-         
+
 //         this.rows = 70;
 //         this.columns = 70;
 //         this.width = 100;
@@ -1065,11 +1112,11 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         this.radii = [];
 //         this.initialTimes = [];
 //         this.centerAmp = [];
-        
+
 //         this.Height_Map = [];
 //         this.Perturbation_Map = [];
 //         this.Perturbation_Map_prev = [];
-        
+
 //         this.allCannonBalls = [];
 //         this.numberOfCannonBalls = 0;
 //         this.activeCannonBalls = [];
@@ -1078,27 +1125,27 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //           let Row = [];
 //           for(var j=0; j< this.columns; j++){
 //             if(i>0 && i<this.rows-1 && j>0 && j<this.columns-1)
-//                 Row.push(1*Math.random());    
+//                 Row.push(1*Math.random());
 //             else
-//                 Row.push(0);       
+//                 Row.push(0);
 //           }
-//           this.Height_Map.push(Row);  
+//           this.Height_Map.push(Row);
 //         }
 
 //          for(var i=0; i< this.rows; i++){
 //           let Row = [];
 //           for(var j=0; j< this.columns; j++){
-//             Row.push(0.0);           
+//             Row.push(0.0);
 //           }
-//           this.Perturbation_Map.push(Row);  
+//           this.Perturbation_Map.push(Row);
 //         }
 
 //         for(var i=0; i< this.rows; i++){
 //           let Row = [];
 //           for(var j=0; j< this.columns; j++){
-//             Row.push(0.0);           
+//             Row.push(0.0);
 //           }
-//           this.Perturbation_Map_prev.push(Row);  
+//           this.Perturbation_Map_prev.push(Row);
 //         }
 
 //         //this.projectile = new cannonBall([0,0,0], [1,1,1], 4, this.width*.86, this.length*.86, -this.height*.86, this.model_transform, this.currentTime );
@@ -1142,8 +1189,8 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         }
 
 //         this.shapes = {    'water': new ( Water.prototype.make_flat_shaded_version() ) (this.rows, this.columns, this.width, this.length, this.Height_Map),
-//                            'cannonBall': new (Subdivision_Sphere.prototype.make_flat_shaded_version() )(4), 
-//                            'tank_opaque': new Tank_Opaque(), 
+//                            'cannonBall': new (Subdivision_Sphere.prototype.make_flat_shaded_version() )(4),
+//                            'tank_opaque': new Tank_Opaque(),
 //                            'tank_transparent': new Tank_Transparent(),
 //                            'tank_edge': new Cube(),
 //                            'caustic': new Square(3),
@@ -1159,10 +1206,10 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         this.submit_shapes( this.context, this.shapes );            // it would be redundant to tell it again.  You should just re-use
 //                                                           // the one called "box" more than once in display() to draw
 //                                                           // multiple cubes.  Don't define more than one blueprint for the
-//                                                           // same thing here.   
+//                                                           // same thing here.
 //         this.minutes = 0;
 //         this.seconds = 0;
-//         this.timer = setTimeout(() => { this.addTime(); },1000);  
+//         this.timer = setTimeout(() => { this.addTime(); },1000);
 //         this.shark_kills = 0;
 //         this.new_shark = 0;
 //         setTimeout(()=>{
@@ -1175,36 +1222,36 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         },20000);
 //           for(var i=0; i<100; i++){
 //     var img=new Image();
-//     img.src="assets/Caustic/target-" + i + ".png"; 
+//     img.src="assets/Caustic/target-" + i + ".png";
 //   }
 //   //preload images
 //         //this.newSharkTimer = setInterval(() => { this.addSharks(); },2000)
 
 
-        
+
 //         ////////  PICKING CODE  /////////
 
-   
+
 //        ///////////////////////// PRE BAKED COMPUTATION, COMPUTING POOL PLANE EQUATION  /////////////////
-        
+
 //        this.A = this.model_transform.times(Mat4.scale([10,10,10])).times(Vec.of(0,0,0,1));
 //        this.B = this.model_transform.times(Mat4.translation([this.width,0,0])).times(Vec.of(0,0,0,1));
-//        this.C = this.model_transform.times(Mat4.translation([0,0,this.length])).times(Vec.of(0,0,0,1)); 
+//        this.C = this.model_transform.times(Mat4.translation([0,0,this.length])).times(Vec.of(0,0,0,1));
 
 //        this.A = Vec.of(this.A[0], this.A[1], this.A[2]);
 //        this.B = Vec.of(this.B[0], this.B[1], this.B[2]);
 //        this.C = Vec.of(this.C[0], this.C[1], this.C[2]);
-    
+
 //        this.AB = this.B.minus(this.A);
-//        this.AC = this.C.minus(this.A);      
+//        this.AC = this.C.minus(this.A);
 //        this.n = this.AB.cross(this.AC);
 //         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-//         text_canvas.addEventListener("click", ( e, rect = text_canvas.getBoundingClientRect(), array_clk = this.array_clk ) =>  
+//         text_canvas.addEventListener("click", ( e, rect = text_canvas.getBoundingClientRect(), array_clk = this.array_clk ) =>
 //                 {
-                     
+
 //                     if(this.duck_sinking) return;
-//                     let canv_coords = Vec.of( e.clientX - rect.left, e.clientY - rect.top, 0, 1 ); 
+//                     let canv_coords = Vec.of( e.clientX - rect.left, e.clientY - rect.top, 0, 1 );
 //                     let plane_inter = this.unproject(canv_coords[0], canv_coords[1]);
 
 //                     var mod_point = Vec.of(plane_inter[0], plane_inter[1], plane_inter[2], 1);
@@ -1228,11 +1275,11 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //          this.ctx_2d.fillText(timeText, 1000, 50);
 //       }
 //       get_timeText(){
-//          return (this.minutes ? (this.minutes > 9 ? this.minutes : "0" + this.minutes) : "00") 
+//          return (this.minutes ? (this.minutes > 9 ? this.minutes : "0" + this.minutes) : "00")
 //                           + ":" + (this.seconds > 9 ? this.seconds : "0" + this.seconds);
 //       }
 //       draw_kills(color, clear=true){
-//          var text = "kills: " + this.shark_kills; 
+//          var text = "kills: " + this.shark_kills;
 //          if(clear) this.ctx_2d.clearRect(0,0,200,200);
 //          this.ctx_2d.fillStyle= color;
 //          this.ctx_2d.font = "18px PixelFont";
@@ -1242,7 +1289,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //          this.ctx_2d.fillText("Click on the pool", 150, 550);
 //          this.ctx_2d.fillText("to shoot the cannon", 150, 580);
 //       }
-    
+
 //       addTime(){
 //         this.seconds = this.seconds + 1;
 //         if (this.seconds >= 60) {
@@ -1253,20 +1300,20 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             }
 //         }
 //         this.draw_time("#000");
-//         this.timer = setTimeout(() => { this.addTime(); },1000); 
+//         this.timer = setTimeout(() => { this.addTime(); },1000);
 //       }
 
 
 //       unproject(i_x, i_y) //unprojects canvas coord and computes intersection with pool plane
-//       {     
+//       {
 //             //Normalized Device Coordinates
 //             var nx = i_x / 1080 *2 -1;
 //             var ny = 1 - i_y / 600 *2;
 
 //             //4d homogeneous Clip coord
-//             var vec4Clip = Vec.of(nx, ny, -1.0, 1.0); // -Z is forward, W just needs to be 1.0 
+//             var vec4Clip = Vec.of(nx, ny, -1.0, 1.0); // -Z is forward, W just needs to be 1.0
 
-//             //4d Camera coords 
+//             //4d Camera coords
 //             var vec4Eye = Vec.of(0, 0, 0, 0);
 //             var matInvProj = this.inv_proj_tr;
 
@@ -1282,10 +1329,10 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             //get normalized dir, from dir
 //             var ray = Vec.of(vec4World[0], vec4World[1], vec4World[2]);
 //             ray = ray.normalized();
-            
+
 //             //get ray -- starts at camera position
 //             var raystart = this.camera_pos;
-            
+
 //             //compute intersection with pool plane!
 //             var fact = (this.A.minus(raystart)).dot(this.n)/(ray.dot(this.n)); //COMPUTE FACTOR SO THAT RAY END IS ON POOL PLANE
 //             var rayend = raystart.plus(ray.times(fact));
@@ -1293,7 +1340,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             return rayend;
 //       }
 
-       
+
 
 //       addShark(shark_position, speed){
 //             this.shark_positions.push({x: shark_position.x, y:shark_position.y, width: shark_position.width, length: shark_position.length});
@@ -1341,10 +1388,10 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         this.seconds = 0;
 //         this.minutes = 0;
 //         clearTimeout(this.timer);
-//         this.timer = setTimeout(() => { this.addTime(); },1000); 
+//         this.timer = setTimeout(() => { this.addTime(); },1000);
 //         this.draw_time("#000");
 //         this.draw_kills("#000");
-   
+
 //       }
 
 
@@ -1364,10 +1411,10 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             let phase = i*(2*Math.PI/this.rows);
 //             let phase2 = j*(2*Math.PI/this.columns);
 //             if(i>0 & i<this.rows-1 && j>0 & j<this.columns-1)
-//                 this.Height_Map[i][j] = this.Height_Map[i][j] - .05*Math.sin(phase + 4.5*this.currentTime);                                                                  
+//                 this.Height_Map[i][j] = this.Height_Map[i][j] - .05*Math.sin(phase + 4.5*this.currentTime);
 //           }
 
-           
+
 //       }
 
 //       convertIndicesToHorizontalCoordinates (xIndex, zIndex)
@@ -1395,7 +1442,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         let relativeTime = 1.4*(this.currentTime - t_0); //time that the wave functions operate by.
 //         if (relativeTime > 0)
 //         {
-//             let freq = 4.7;     //Technically, frequency is actually freq/(2*pi) 
+//             let freq = 4.7;     //Technically, frequency is actually freq/(2*pi)
 //             if (freq*relativeTime < 2*Math.PI)
 //            this.Perturbation_Map[clickX][clickZ] = -maxHeight*Math.sin(freq*relativeTime);
 //             else
@@ -1403,19 +1450,19 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 //           for(var i = 0; i<this.rows; i++)
 //             for(var j = 0; j<this.columns; j++)
-//             { 
+//             {
 
 //               let  Distance = this.indexDistanceFunction(i,j, clickX,clickZ);
 
 //               if((i==clickX && j==clickZ)||Distance>=radius)
 //                 continue;
 
-//                let timeScalingFactor = 0.3; 
-//                let timeDelay = Distance*timeScalingFactor; 
+//                let timeScalingFactor = 0.3;
+//                let timeDelay = Distance*timeScalingFactor;
 //                let Ampl = (2.2*maxHeight)/Distance;
 //                let currVertexTime = relativeTime - timeDelay;
 //                let timeDiff = currVertexTime - relativeTime;
-                
+
 //                 if (Distance<radius && Distance <= 2*Math.sqrt(2) && relativeTime>=timeDelay)
 //                 {
 
@@ -1437,7 +1484,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //     {
 //      for (var i = 0; i<this.numberOfWaveCenters; i++)
 //      {
-//          if(this.currentTime>this.initialTimes[i]) 
+//          if(this.currentTime>this.initialTimes[i])
 //       this.centerAmp[i] = this.centerAmp[i] * 0.981;
 //      }
 //     }
@@ -1492,7 +1539,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //     }
 
 //    eliminateWave(index)
-//     {        
+//     {
 //         this.Xcoords.splice(index,1) ;     //override the entry at index with the last entry and forget the last entry
 //         this.Zcoords.splice(index,1) ;
 //         this.radii.splice(index,1);
@@ -1532,7 +1579,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //           this.shapes.cannonBall.draw( graphics_state, this.allCannonBalls[c].cannonBall_transform, this.m_cannonBall);
 //           this.allCannonBalls[c].veloAndPosUpdate(cannonBallLaunchTime);
 //         }
-//       } 
+//       }
 // }
 
 
@@ -1543,7 +1590,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //     shootCannonBallToCoords(clickX, clickZ)
 //     {
 //         let cannonBallOrigin = [0,5,0];
-//         let cannonBallDestination = [clickX,0,clickZ]; 
+//         let cannonBallDestination = [clickX,0,clickZ];
 //         let cannonBallDestinationIndices = [parseInt(clickX/this.deltaX), 0, parseInt(clickZ/this.deltaZ)]; //Note the y value is actually not an index,
 //                                                                                                                 //just the x and z values, elements 0 and 2 of the array, are.
 //         let timeDurrationDistanceScale = (1/100);
@@ -1556,22 +1603,22 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             let cannonBallAirtime = timeDurrationDistanceScale*distBetweenCannonBallOriginAndDestination;
 //             let heightDependentSplashFactor = 0;
 //             let splashHeight = 3 + heightDependentSplashFactor*distBetweenCannonBallOriginAndDestination;
-//             let waveStartTime = this.currentTime + cannonBallAirtime;   
+//             let waveStartTime = this.currentTime + cannonBallAirtime;
 
-//             this.allCannonBalls.push(new cannonBall(cannonBallOrigin, cannonBallDestination, cannonBallAirtime, this.rows*this.deltaX, this.columns*this.deltaZ, -.9*this.height, this.model_transform, this.currentTime + cannonFireTimeDelay)); 
+//             this.allCannonBalls.push(new cannonBall(cannonBallOrigin, cannonBallDestination, cannonBallAirtime, this.rows*this.deltaX, this.columns*this.deltaZ, -.9*this.height, this.model_transform, this.currentTime + cannonFireTimeDelay));
 //             this.activeCannonBalls.push(this.numberOfCannonBalls);
 //             this.numberOfCannonBalls++;
 //             this.pushNewClickInfo(cannonBallDestinationIndices[0], cannonBallDestinationIndices[2], waveStartTime + cannonFireTimeDelay, splashHeight);
 //          }
 //         else
-//         {     
+//         {
 //             let commonAirTimeForAllCannonballs = 3;
-//             this.allCannonBalls.push(new cannonBall(cannonBallOrigin, cannonBallDestination, commonAirTimeForAllCannonballs, this.rows*this.deltaX, this.columns*this.deltaZ, -.9*this.height, this.model_transform, this.currentTime + cannonFireTimeDelay)); 
+//             this.allCannonBalls.push(new cannonBall(cannonBallOrigin, cannonBallDestination, commonAirTimeForAllCannonballs, this.rows*this.deltaX, this.columns*this.deltaZ, -.9*this.height, this.model_transform, this.currentTime + cannonFireTimeDelay));
 //             this.numberOfCannonBalls++;
 //             this.pushNewClickInfo(cannonBallDestinationIndices[0], cannonBallDestinationIndices[2], waveStartTime + cannonFireTimeDelay, splashHeight);
 //         }
 //     }
-    
+
 
 //     set_colors() {
 //           // TODO:  Create a class member variable to store your cube's colors.
@@ -1607,8 +1654,8 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //           }
 //       }
 
-//        make_control_panel()            
-//        {  
+//        make_control_panel()
+//        {
 
 //             this.key_triggered_button( "Restart", ["x"], () => {
 //                 this.ctx_2d.clearRect(0,0,1080,600);
@@ -1617,7 +1664,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             })
 
 
-           
+
 //       }
 
 //     draw_box( graphics_state, model_transform, color_box )  // SO THAT EXTRA CREDIT 2 IS FULFILLED
@@ -1632,14 +1679,14 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         {
 //           model_transform = model_transform.times(Mat4.translation([1,1,0])).times( Mat4.rotation(-Math.abs(max_angle*Math.sin(9*t)) , Vec.of( 0,0,1 ))).times(Mat4.translation([-1,1,0]));
 //         }
-//         else 
+//         else
 //         {
-//           model_transform = model_transform.times(Mat4.translation([1,1,0])).times( Mat4.rotation(-max_angle , Vec.of( 0,0,1 ))).times(Mat4.translation([-1,1,0])); 
+//           model_transform = model_transform.times(Mat4.translation([1,1,0])).times( Mat4.rotation(-max_angle , Vec.of( 0,0,1 ))).times(Mat4.translation([-1,1,0]));
 //         }
 //         if (this.Outline)
 //           this.shapes.outline.draw( graphics_state, model_transform, this.white, "LINES" );
-//          else 
-//           this.shapes.box.draw( graphics_state, model_transform, this.plastic.override({ color: color_box })); 
+//          else
+//           this.shapes.box.draw( graphics_state, model_transform, this.plastic.override({ color: color_box }));
 
 //         return model_transform;
 //       }
@@ -1654,22 +1701,22 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //         rect1y < rect2y + rect2.length &&
 //         rect1y + rect1.length > rect2y);
 //     }
-    
+
 //     angle_between(position1, position2){
 //         let diffX = position1.x - position2.x;
 //         let diffY = position2.y - position1.y ;
 //         var ratio = diffY == 0 ? 0 : diffY/diffX;
-//         var angle = diffX < 0 ? Math.PI + Math.atan(ratio) : Math.atan(ratio); 
-//         return angle;   
+//         var angle = diffX < 0 ? Math.PI + Math.atan(ratio) : Math.atan(ratio);
+//         return angle;
 //     }
-    
+
 //     draw_skybox(graphics_state){
 //         //let box_transform = this.
 //         const scaling = 5;
-//         //this.shapes.wall.draw( graphics_state, this.model_transform.times(Mat4.rotation(Math.PI/2,Vec.of(0,0,1))).times(Mat4.translation([this.width,this.length/2],1)).times(Mat4.scale([this.width*3,this.length*3,1])), this.m_floor );  
-//         this.shapes.wall.draw( graphics_state, this.model_transform.times(Mat4.rotation(-Math.PI/2,Vec.of(0,0,1))).times(Mat4.scale([this.length*scaling,1,this.length*scaling])).times(Mat4.translation([-1 + this.height/(scaling*this.length),-this.width*1.5,0.11])).times(Mat4.rotation(-Math.PI/2,Vec.of(0,1,0))), this.m_wall1 ); 
-//         this.shapes.wall.draw( graphics_state, this.model_transform.times(Mat4.rotation(Math.PI/2,Vec.of(1,0,0))).times(Mat4.scale([this.width*scaling,1,this.length*scaling])).times(Mat4.translation([0,-this.width*1.5,-1 + this.height/(scaling*this.length)])).times(Mat4.rotation(-Math.PI,Vec.of(0,1,0))), this.m_wall2 );  
-//         this.shapes.floor.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width,this.edge_height-this.height-0.01,this.length/2])).times(Mat4.scale([this.width*3,1,this.length*3])), this.m_floor );  
+//         //this.shapes.wall.draw( graphics_state, this.model_transform.times(Mat4.rotation(Math.PI/2,Vec.of(0,0,1))).times(Mat4.translation([this.width,this.length/2],1)).times(Mat4.scale([this.width*3,this.length*3,1])), this.m_floor );
+//         this.shapes.wall.draw( graphics_state, this.model_transform.times(Mat4.rotation(-Math.PI/2,Vec.of(0,0,1))).times(Mat4.scale([this.length*scaling,1,this.length*scaling])).times(Mat4.translation([-1 + this.height/(scaling*this.length),-this.width*1.5,0.11])).times(Mat4.rotation(-Math.PI/2,Vec.of(0,1,0))), this.m_wall1 );
+//         this.shapes.wall.draw( graphics_state, this.model_transform.times(Mat4.rotation(Math.PI/2,Vec.of(1,0,0))).times(Mat4.scale([this.width*scaling,1,this.length*scaling])).times(Mat4.translation([0,-this.width*1.5,-1 + this.height/(scaling*this.length)])).times(Mat4.rotation(-Math.PI,Vec.of(0,1,0))), this.m_wall2 );
+//         this.shapes.floor.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width,this.edge_height-this.height-0.01,this.length/2])).times(Mat4.scale([this.width*3,1,this.length*3])), this.m_floor );
 //     }
 //     draw_gameOver(){
 //          this.ctx_drawn = true;
@@ -1706,7 +1753,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             if(this.collision_between(this.duck_position, this.goal_position)){
 //                 this.goal_position = this.randomPosition(this.offsets.duck);
 //                 this.goal = Mat4.translation([this.goal_position.x,0,this.goal_position.y]);
-//             }    
+//             }
 //         }
 //          rotation = Mat4.rotation(this.duck_angle, Vec.of(0,1,0));
 //          let duck_transform = this.model_transform.times(this.duck_translation);
@@ -1732,7 +1779,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //                   remove_sharks.add(s);
 //                 }
 //             }else if(this.sharks_moving){
-//                 //update transform 
+//                 //update transform
 //                 this.shark_transforms[s] = this.duck_translation.map( (x,i) => Vec.from( current_shark_transform[i] ).mix( x, 0.01*this.shark_status[s].speed ));
 //                 //update position, check collision
 //                 this.shark_positions[s].x = this.shark_transforms[s][0][3];
@@ -1746,7 +1793,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             //apply transforms to draw shark
 //             let shark_transform = this.model_transform.times(this.shark_transforms[s]).times(shark_rotation);
 //             this.shapes.shark.draw( graphics_state, shark_transform, this.m_shark);
-//             //remove dead sharks 
+//             //remove dead sharks
 //          }
 //          remove_sharks.forEach((shark)=>{
 //             this.shark_positions.splice(shark,1);
@@ -1758,12 +1805,12 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //     draw_cannon(graphics_state, cannon_transform){
 //          if(this.cannonBallDest){
 //             let angle = this.angle_between({x:0,y:0}, this.cannonBallDest);
-//             this.cannon_angle = (1-0.5)*this.cannon_angle + 0.5*angle;             
+//             this.cannon_angle = (1-0.5)*this.cannon_angle + 0.5*angle;
 //          }
 
 //          let rotation = Mat4.rotation(this.cannon_angle - Math.PI/2, Vec.of(0,1,0));
 //          cannon_transform = cannon_transform.times(rotation);
-            
+
 //          this.shapes.cannon.draw( graphics_state, cannon_transform, this.m_cannon);
 //          this.shapes.base.draw( graphics_state, cannon_transform, this.m_base);
 //          this.shapes.wheels.draw( graphics_state, cannon_transform, this.m_wheels);
@@ -1772,34 +1819,34 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 //     display( graphics_state )
 //       { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
-  
+
 //         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
 //         this.currentTime = t, this.dtime = dt;
 
 
 //        this.copyCurrPerturbationToPrevAndReset();
 //        this.defaultChangeHeightMap();
-       
+
 
 //           this.collectCurrPerturbations();
-//           this.decreaseAmplitudes();       
-        
+//           this.decreaseAmplitudes();
+
 //            if (t==0)
 //            {
 //                 //this.pushNewClickInfo(10,20,5,3);
 //            }
-  
+
 
 //         this.setHeightMap();
-        
-        
 
 
 
-//          //CREATE NEW WATER SHAPE 
-//          this.shapes.water = new ( Water.prototype.make_flat_shaded_version() ) (this.rows, this.columns, this.width, this.length, this.Height_Map);  
+
+
+//          //CREATE NEW WATER SHAPE
+//          this.shapes.water = new ( Water.prototype.make_flat_shaded_version() ) (this.rows, this.columns, this.width, this.length, this.Height_Map);
 //          this.shapes.water.send_water(this.gl);
-         
+
 //          //DRAW OPAQUE ITEMS OBJECTS
 //          let cannon_transform = this.model_transform.times(Mat4.translation([2.5,8+this.edge_height,2.5])).times(Mat4.rotation(0,Vec.of(0,1,0)));
 //          this.draw_skybox(graphics_state);
@@ -1809,7 +1856,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 
 //          if (this.caustic_counter == 99)
 //             this.caustic_counter = 0;
-        
+
 //         if(this.caustic_update)
 //         {
 //             this.caustic_counter += 1;
@@ -1819,26 +1866,26 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //             this.caustic_update = true;
 
 //          var caustic_str = "assets/Caustic/target-" + this.caustic_counter.toString() +  ".png";
-         
+
 //          if(!this.gif_ready){
-//             this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_gif_caustic.override({texture: this.context.get_instance(caustic_str,false)}));   
-//             this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height + 0.1,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_caustic);   
+//             this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_gif_caustic.override({texture: this.context.get_instance(caustic_str,false)}));
+//             this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height + 0.1,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_caustic);
 //          }else{
-//              this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_caustic);   
-//              this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height + 0.1,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_gif_caustic.override({texture: this.context.get_instance(caustic_str,false)}));   
+//              this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_caustic);
+//              this.shapes.caustic.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height-this.height + 0.1,this.length/2])).times(Mat4.scale([this.width/2,1,this.length/2])), this.m_gif_caustic.override({texture: this.context.get_instance(caustic_str,false)}));
 //          }
 //          this.shapes.tank_opaque.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,-this.height/2,this.length/2])).times(Mat4.scale([this.width/2,this.height/2,this.length/2])), this.m_tank_opaque);
 //          this.shapes.tank_edge.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,this.edge_height,this.length/2])).times(Mat4.scale([this.width/2,this.edge_height,this.length/2])), this.m_tank, );
-      
 
 
 
-//            //PROJECTILE cannonBall 
+
+//            //PROJECTILE cannonBall
 //          if (t==0)
 //          this.initializeCannonballTransforms();
 
 //          this.drawAllCannonBalls(graphics_state);
-         
+
 //         this.inactiveCannonBalls = [];
 //          for(var c=0; c < this.activeCannonBalls.length; c++){ //for all active cannonballs, check collsions
 //             let cannonBall = this.allCannonBalls[this.activeCannonBalls[c]];
@@ -1855,7 +1902,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //                             this.draw_kills("#000");
 //                         }
 //                     }
-//                 }  
+//                 }
 //             }
 //          }
 //          for(var c=0; c< this.inactiveCannonBalls.length; c++){
@@ -1863,7 +1910,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //          }
 
 
-//          this.shapes.tank_transparent.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,-this.height/2,this.length/2])).times(Mat4.scale([this.width/2,this.height/2,this.length/2])), this.m_water);         
+//          this.shapes.tank_transparent.draw( graphics_state, this.model_transform.times(Mat4.translation([this.width/2,-this.height/2,this.length/2])).times(Mat4.scale([this.width/2,this.height/2,this.length/2])), this.m_water);
 //          //THEN DRAW WATER/OTHER TRANSPARENT OBJECTS
 //          this.shapes.water.draw( graphics_state, this.model_transform, this.m_water, "TRIANGLE_STRIP" );
 
@@ -1886,7 +1933,7 @@ class Grid_Sphere extends Shape           // With lattitude / longitude division
 //              }
 
 //          }
-     
+
 
 //       }
 //   }
