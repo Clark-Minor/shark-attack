@@ -624,3 +624,16 @@ class Canvas_Widget                    // Canvas_Widget embeds a WebGL demo onto
       this.canvas_manager.render();   // Start WebGL initialization.  Note that render() will re-queue itself for more calls.
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
