@@ -86,6 +86,7 @@ class Project_Scene extends Scene_Component
                          tank: new Body_Of_Water(),
                          skybox: new Cube(),
                          octopus: new Octopus(),
+                         eyes: new Octopus_Eyes(),
                          //octpus_legs: new Leg(),
                         }
 
@@ -113,7 +114,8 @@ class Project_Scene extends Scene_Component
                 ambient: 1,  //ambient coefficient 1
                 //diffusivity: 1,
                 specular: 0.5,
-            })
+            }),
+            eye_material: context.get_instance(Phong_Shader ).material(),
           }
 
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
@@ -130,6 +132,12 @@ class Project_Scene extends Scene_Component
         this.key_triggered_button( "Attach to planet 4", [ "4" ], () => this.attached = () => this.planet_4 ); this.new_line();
         this.key_triggered_button( "Attach to planet 5", [ "5" ], () => this.attached = () => this.planet_5 );
         this.key_triggered_button( "Attach to moon",     [ "m" ], () => this.attached = () => this.moon     );
+      }
+
+      draw_octopus(graphics_state){
+          var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,-5)))
+          this.shapes.octopus.draw(graphics_state, octopus_t, this.materials.octopus_skin);
+          this.shapes.eyes.draw(graphics_state,octopus_t, this.materials.eye_material);
       }
 
 
@@ -179,12 +187,12 @@ class Project_Scene extends Scene_Component
         let tank_transform = Mat4.identity().times(Mat4.translation([this.width/2, this.length/2, -this.height/2]))
                                             .times(Mat4.scale([this.width/2, this.length/2, -this.height/2]));
         this.shapes.tank.draw(graphics_state, tank_transform, this.materials.water_material);
-
-        this.shapes.octopus.draw(graphics_state, Mat4.identity(), this.materials.octopus_skin);
+        this.draw_octopus(graphics_state);
       }
 
 
   }
+
 
 //SURFACE OF WATER//
 window.Water = window.classes.Water =
@@ -284,9 +292,6 @@ class Octopus extends Shape    // The simplest possible Shape – one triangle. 
                                   // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at
                                   // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
       var head_t = Mat4.identity().times(Mat4.scale([3,3,3]))
-      var eye_1_t = Mat4.identity().times(Mat4.scale([.5,.5,.5]))
-      eye_1_t = eye_1_t.times(Mat4.translation(Vec.of(0,3,0)))
-      var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(1,0,0)))
       var leg_1_t = Mat4.identity().times(Mat4.translation(Vec.of(-2,0,-1.5)))
       leg_1_t = leg_1_t.times(Mat4.rotation(Math.PI/2,Vec.of(1,0,0)))
       var leg_2_t = leg_1_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
@@ -305,8 +310,8 @@ class Octopus extends Shape    // The simplest possible Shape – one triangle. 
       leg_8_t = leg_8_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
 
       Subdivision_Sphere.insert_transformed_copy_into(this, [2], head_t)
-      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t)
-      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t)
+      //Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t)
+      //Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t)
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_1_t)
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_2_t)
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_3_t)
@@ -321,7 +326,18 @@ class Octopus extends Shape    // The simplest possible Shape – one triangle. 
     }
 }
 
+window.Octopus_Eyes = window.classes.Octopus_Eyes =
+class Octopus_Eyes extends Shape
+{
+  constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
+     { super( "positions", "normals", "texture_coords" );
+     var eye_1_t = Mat4.identity().times(Mat4.translation(Vec.of(3,0,0))).times(Mat4.scale([.7,.7,.7]));
 
+     var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(0,1,0)));
+     Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t);
+     Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t);
+   }
+}
 
 
 // Extra credit begins here (See TODO comments below):
