@@ -34,41 +34,37 @@ class Project_Scene extends Scene_Component
         this.width = 95;  //x
         this.length = 70; //y
         this.height = 20;
+        this.edge_height = this.height/10;
         this.Height_Map = [];
         this.time = 1;
 
-//         //random z
-//         for(var i=0; i< this.rows; i++)
-//         {
-//           let Row = [];
-//           for(var j=0; j< this.columns; j++)
-//           {
-//             if(i>0 && i<this.rows-1 && j>0 && j<this.columns-1)
-//                 Row.push(3*Math.random());
-//             else
-//                 Row.push(0);
-//           }
-//           this.Height_Map.push(Row);
-//         }
-
-
-
-        //PHASE SKETCH
-        function flow_of_water(ttt)
+        //random z
+        for(var i=0; i< this.rows; i++)
         {
-          for(var i = 0; i < this.rows; i++)
-            for(var j = 0; j < this.columns; j++)
-            {
-
-              let phase = i * (2 * Math.PI / this.rows);
-              let phase2 = j * (2 * Math.PI / this.columns);
-              if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
-                  this.Height_Map[i][j] = 3*Math.random() - .05*Math.sin(phase + 4.5*ttt);
-            }
+          let Row = [];
+          for(var j=0; j< this.columns; j++)
+          {
+            if(i>0 && i<this.rows-1 && j>0 && j<this.columns-1)
+                Row.push(3*Math.random());
+            else
+                Row.push(0);
+          }
+          this.Height_Map.push(Row);
         }
+            
+        this.caustic_counter = 0;
+        this.caustic_update = true;
+        this.gif_ready = false;
+        setTimeout( () => { this.gif_ready = true; }, 20000 );
+        for(var i = 0; i < 100; i++)
+        {
+            var img=new Image();
+            img.src = "assets/Caustic/target-" + i + ".png";
+        }
+        
 
 
-        const shapes = { torus:  new Torus( 15, 15 ),
+        this.shapes = { torus:  new Torus( 15, 15 ),
                          torus2: new ( Torus.prototype.make_flat_shaded_version() )( 15, 15 ),
 
                          // TODO:  Fill in as many additional shape instances as needed in this key/value table.
@@ -87,11 +83,11 @@ class Project_Scene extends Scene_Component
                          skybox: new Cube(),
                          octopus: new Octopus(),
                          eyes: new Octopus_Eyes(),
-                         //octpus_legs: new Leg(),
+                         caustic: new Square(),
                         }
 
-
-        this.submit_shapes( context, shapes );
+        this.context = context;
+        this.submit_shapes( this.context, this.shapes );
 
         // Make some Material objects available to you:
         this.materials =
@@ -102,20 +98,30 @@ class Project_Scene extends Scene_Component
               specular: 0.5,
               smoothness: 80   //fuck is the difference???
             }),
+            
             ring:     context.get_instance( Ring_Shader  ).material(),
 
             box_texture: context.get_instance( Phong_Shader ).material(Color.of(0, 0, 0, 1), //opaque black
             {
-                ambient: 1,  //ambient coefficient 1
-                texture: context.get_instance("assets/skysky.png", true) //true = trilinear filtering
+                ambient: 1,  
+                texture: context.get_instance("assets/sky3.png", true) //true = trilinear filtering
             }),
+
             octopus_skin: context.get_instance( Phong_Shader ).material(Color.of(204/255,0,170/255,1),
             {
-                ambient: 1,  //ambient coefficient 1
+                ambient: 1,  
                 //diffusivity: 1,
                 specular: 0.5,
             }),
-            eye_material: context.get_instance(Phong_Shader ).material(),
+
+            eye_material: context.get_instance( Phong_Shader ).material(Color.of(1,1,1,1), {ambient: 0.8}),
+
+            caustic_material: context.get_instance( Texture_Caustic ).material(Color.of( 0,0,0,1 ), 
+            {
+                  ambient: 0.4, 
+                  texture: context.get_instance("assets/Caustic/target-0.png",true)
+            }),
+
           }
 
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
@@ -134,11 +140,26 @@ class Project_Scene extends Scene_Component
         this.key_triggered_button( "Attach to moon",     [ "m" ], () => this.attached = () => this.moon     );
       }
 
-      draw_octopus(graphics_state){
-          var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,-5)))
-          this.shapes.octopus.draw(graphics_state, octopus_t, this.materials.octopus_skin);
-          this.shapes.eyes.draw(graphics_state,octopus_t, this.materials.eye_material);
-      }
+    draw_octopus(graphics_state)
+    {
+        var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5)))
+        this.shapes.octopus.draw(graphics_state, octopus_t, this.materials.octopus_skin);
+        this.shapes.eyes.draw(graphics_state,octopus_t, this.materials.eye_material);
+    }
+
+//PHASE SKETCH
+    flow_of_water()
+    {
+      for(var i = 0; i < this.rows; i++)
+        for(var j = 0; j < this.columns; j++)
+        {
+
+          let phase = i * (2 * Math.PI / this.rows);
+          let phase2 = j * (2 * Math.PI / this.columns);
+          if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
+              this.Height_Map[i][j] = this.Height_Map[i][j] - .05*Math.sin(phase + 4.5*this.time);
+        }
+    }    
 
 
     display( graphics_state )
@@ -159,16 +180,16 @@ class Project_Scene extends Scene_Component
         this.shapes.triangle_for_water7.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(1,0,0,1)}) );
         this.shapes.triangle_for_water8.draw( graphics_state, Mat4.identity(), this.materials.water_material.override({color: Color.of(1,1,0,1)}) );
 
-        //this.flow_of_water(this.time);
+        this.flow_of_water();
 
         this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([100,100,100])), this.materials.box_texture);
 
-        //from surfaces_demo
-        const random = ( x ) => Math.sin( 1000*x + graphics_state.animation_time/1000 );
-        //console.log(graphics_state.animation_time)
-        this.shapes.water.positions.forEach( (p,i,a) =>
-                        a[i] = Vec.of( p[0], p[1], 5 ) );
-//         this.shapes.water.positions.forEach(p => p[2] = .5 )
+//         //from surfaces_demo
+//         const random = ( x ) => Math.sin( 1000*x + graphics_state.animation_time/1000 );
+//         //console.log(graphics_state.animation_time)
+//         this.shapes.water.positions.forEach( (p,i,a) =>
+//                         a[i] = Vec.of( p[0], p[1], 5 ) );
+// //         this.shapes.water.positions.forEach(p => p[2] = .5 )
 
 
         //CREATE NEW WATER SHAPE
@@ -188,7 +209,46 @@ class Project_Scene extends Scene_Component
                                             .times(Mat4.scale([this.width/2, this.length/2, -this.height/2]));
         this.shapes.tank.draw(graphics_state, tank_transform, this.materials.water_material);
         this.draw_octopus(graphics_state);
-      }
+
+        if (this.caustic_counter == 99)
+            this.caustic_counter = 0;
+        
+        if(this.caustic_update)
+        {
+            this.caustic_counter += 1;
+            this.caustic_update = false;
+        }
+        else
+            this.caustic_update = true;
+
+         var caustic_str = "assets/Caustic/target-" + this.caustic_counter.toString() +  ".png";
+         
+         if(!this.gif_ready)
+         {
+            this.shapes.caustic.draw( graphics_state, Mat4.identity()//.times(Mat4.translation([ this.width/2, this.edge_height-this.height, this.length/2 ]))
+                                                                     //.times(Mat4.scale([ this.width/2, 1, this.length/2 ]))
+                                                                     
+                                                                     //.times(Mat4.translation([this.width/2, this.length/2, -this.height/2]))
+                                                                     //.times(Mat4.scale([this.width/2, this.length/2, -this.height/2])) 
+                                                      ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );   
+            this.shapes.caustic.draw( graphics_state, Mat4.identity()//.times(Mat4.translation([ this.width/2, this.edge_height-this.height + 0.1, this.length/2 ]))
+                                                                     //.times(Mat4.scale([ this.width/2, 1, this.length/2 ])) 
+                                                                     
+                                                                     //.times(Mat4.translation([this.width/2, this.length/2, -this.height/2]))
+                                                                     //.times(Mat4.scale([this.width/2, this.length/2, -this.height/2])) 
+                                                      ,this.materials.caustic_material);   
+         }
+         else
+         {
+             this.shapes.caustic.draw( graphics_state, Mat4.identity()//.times(Mat4.translation([this.width/2,this.edge_height-this.height,this.length/2]))
+                                                                      //.times(Mat4.translation([this.width/2,this.edge_height-this.height + 0.1,this.length/2]))
+                                                                      //.times(Mat4.scale([this.width/2, 1, this.length/2]))
+
+                                                                     //.times(Mat4.translation([this.width/2, this.length/2, -this.height/2]))
+                                                                     //.times(Mat4.scale([this.width/2, this.length/2, -this.height/2])) 
+                                                       ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));   
+         }
+      }//end of display
 
 
   }
@@ -247,7 +307,7 @@ class Water extends Shape
 
      send_water(gl)
      {
-         this.copy_onto_graphics_card(gl, ["positions", "normals"], false);
+         this.copy_onto_graphics_card(gl, ["positions", "normals"], false);  
      }
 
 
@@ -274,23 +334,20 @@ class Body_Of_Water extends Shape
                  // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
                  // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
                  // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
-        this.indices.push( 0, 1, 2, 1, 3, 2,        //without top part / "lid"
+        this.indices.push( 0, 1, 2, 1, 3, 2,        
+                           4, 5, 6, 5, 7, 6,
                            8, 9, 10, 9, 11, 10,
                            12, 13, 14, 13, 15, 14,
-                           16, 17, 18, 17, 19, 18,
-                           20, 21, 22, 21, 23, 22);
+                           16, 17, 18, 17, 19, 18,                           //without top part / "lid"
+                           /*20, 21, 22, 21, 23, 22*/);
         // It stinks to manage arrays this big.  Later we'll show code that generates these same cube vertices more automatically.
       }
 }
 
 window.Octopus = window.classes.Octopus =
-class Octopus extends Shape    // The simplest possible Shape – one triangle.  It has 3 vertices, each
-{ constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
-    { super( "positions", "normals", "texture_coords" );                       // Name the values we'll define per each vertex.
-                                  // First, specify the vertex positions -- the three point locations of an imaginary triangle.
-                                  // Next, supply vectors that point away from the triangle face.  They should match up with the points in
-                                  // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at
-                                  // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
+class Octopus extends Shape    
+{ constructor()                 
+    { super( "positions", "normals", "texture_coords" );                       
       var head_t = Mat4.identity().times(Mat4.scale([3,3,3]))
       var leg_1_t = Mat4.identity().times(Mat4.translation(Vec.of(-2,0,-1.5)))
       leg_1_t = leg_1_t.times(Mat4.rotation(Math.PI/2,Vec.of(1,0,0)))
@@ -309,7 +366,7 @@ class Octopus extends Shape    // The simplest possible Shape – one triangle. 
       var leg_8_t = leg_7_t.times(Mat4.translation(Vec.of(Math.PI/4,0,1.5)))
       leg_8_t = leg_8_t.times(Mat4.rotation(Math.PI/4,Vec.of(0,1,0)))
 
-      Subdivision_Sphere.insert_transformed_copy_into(this, [2], head_t)
+      Subdivision_Sphere.insert_transformed_copy_into(this, [3], head_t)
       //Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t)
       //Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t)
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_1_t)
@@ -319,10 +376,8 @@ class Octopus extends Shape    // The simplest possible Shape – one triangle. 
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_5_t)
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_6_t)
       Half_Torus.insert_transformed_copy_into(this, [15,15], leg_7_t)
-      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_8_t)            // Index into our vertices to connect them into a whole triangle.
-                 // A position, normal, and texture coord fully describes one "vertex".  What's the "i"th vertex?  Simply the combined data
-                 // you get if you look up index "i" of those lists above -- a position, normal vector, and tex coord together.  Lastly we
-                 // told it how to connect vertex entries into triangles.  Every three indices in "this.indices" traces out one triangle.
+      Half_Torus.insert_transformed_copy_into(this, [15,15], leg_8_t)
+
     }
 }
 
@@ -331,13 +386,38 @@ class Octopus_Eyes extends Shape
 {
   constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
      { super( "positions", "normals", "texture_coords" );
-     var eye_1_t = Mat4.identity().times(Mat4.translation(Vec.of(3,0,0))).times(Mat4.scale([.7,.7,.7]));
+     var eye_1_t = Mat4.identity().times(Mat4.translation(Vec.of(3,0,1))).times(Mat4.scale([.7,.7,.7]));
 
-     var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(0,1,0)));
+     var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(0,2,0)));
      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t);
      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t);
    }
 }
+
+class Texture_Caustic extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER ********* 
+    {
+      // TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
+      return `
+        uniform sampler2D texture;
+        void main()
+        { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+          { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.            
+            return;
+          }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+                                            // Phong shading is not to be confused with the Phong Reflection Model.
+   
+          vec4 tex_color = texture2D( texture, f_tex_coord);                         // Sample the texture image in the correct place.
+          vec3 bumped_N = normalize( N + tex_color.rgb - 0.5 * vec3(1,1,1) );
+                                                                                     // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w ); 
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( bumped_N );                     // Compute the final color with contributions from lights.
+        }`;
+    }
+}
+
+
 
 
 // Extra credit begins here (See TODO comments below):

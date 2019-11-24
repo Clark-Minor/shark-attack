@@ -535,6 +535,7 @@ class Torus extends Shape                                         // Build a don
 
         Surface_Of_Revolution.insert_transformed_copy_into( this, [ rows, columns, circle_points ] );
       } }
+
 window.Half_Torus = window.classes.Half_Torus =
       class Half_Torus extends Shape                                         // Build a donut shape.  An example of a surface of revolution.
         { constructor( rows, columns )
@@ -547,44 +548,45 @@ window.Half_Torus = window.classes.Half_Torus =
               Half_Surface_Of_Revolution.insert_transformed_copy_into( this, [ rows, columns, circle_points ] );
             } }
 
-  window.Basic_Shader = window.classes.Basic_Shader =
-  class Basic_Shader extends Shader             // Subclasses of Shader each store and manage a complete GPU program.  This Shader is
-            {                                             // the simplest example of one.  It samples pixels from colors that are directly assigned
-              material() { return { shader: this } }      // to the vertices.  Materials here are minimal, without any settings.
-              map_attribute_name_to_buffer_name( name )        // The shader will pull single entries out of the vertex arrays, by their data fields'
-                {                                              // names.  Map those names onto the arrays we'll pull them from.  This determines
-                                                               // which kinds of Shapes this Shader is compatible with.  Thanks to this function,
-                                                               // Vertex buffers in the GPU can get their pointers matched up with pointers to
-                                                               // attribute names in the GPU.  Shapes and Shaders can still be compatible even
-                                                               // if some vertex data feilds are unused.
-                  return { object_space_pos: "positions", color: "colors" }[ name ];      // Use a simple lookup table.
-                }
-                // Define how to synchronize our JavaScript's variables to the GPU's:
-              update_GPU( g_state, model_transform, material, gpu = this.g_addrs, gl = this.gl )
-                  { const [ P, C, M ] = [ g_state.projection_transform, g_state.camera_transform, model_transform ],
-                                  PCM = P.times( C ).times( M );
-                    gl.uniformMatrix4fv( gpu.projection_camera_model_transform_loc, false, Mat.flatten_2D_to_1D( PCM.transposed() ) );
-                  }
-              shared_glsl_code()            // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
-                { return `precision mediump float;
-                          varying vec4 VERTEX_COLOR;
-                  `;
-                }
-              vertex_glsl_code()           // ********* VERTEX SHADER *********
-                { return `
-                    attribute vec4 color;
-                    attribute vec3 object_space_pos;
-                    uniform mat4 projection_camera_model_transform;
 
-                    void main()
-                    { gl_Position = projection_camera_model_transform * vec4(object_space_pos, 1.0);      // The vertex's final resting place (in NDCS).
-                      VERTEX_COLOR = color;                                                               // Use the hard-coded color of the vertex.
-                    }`;
-                }
-              fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-                { return `
-                    void main()
-                    { gl_FragColor = VERTEX_COLOR;                                    // The interpolation gets done directly on the per-vertex colors.
-                    }`;
-                }
-            }
+window.Basic_Shader = window.classes.Basic_Shader =
+class Basic_Shader extends Shader             // Subclasses of Shader each store and manage a complete GPU program.  This Shader is 
+{                                             // the simplest example of one.  It samples pixels from colors that are directly assigned 
+  material() { return { shader: this } }      // to the vertices.  Materials here are minimal, without any settings.
+  map_attribute_name_to_buffer_name( name )        // The shader will pull single entries out of the vertex arrays, by their data fields'
+    {                                              // names.  Map those names onto the arrays we'll pull them from.  This determines
+                                                   // which kinds of Shapes this Shader is compatible with.  Thanks to this function, 
+                                                   // Vertex buffers in the GPU can get their pointers matched up with pointers to 
+                                                   // attribute names in the GPU.  Shapes and Shaders can still be compatible even
+                                                   // if some vertex data feilds are unused. 
+      return { object_space_pos: "positions", color: "colors" }[ name ];      // Use a simple lookup table.
+    }
+    // Define how to synchronize our JavaScript's variables to the GPU's:
+  update_GPU( g_state, model_transform, material, gpu = this.g_addrs, gl = this.gl )
+      { const [ P, C, M ] = [ g_state.projection_transform, g_state.camera_transform, model_transform ],
+                      PCM = P.times( C ).times( M );
+        gl.uniformMatrix4fv( gpu.projection_camera_model_transform_loc, false, Mat.flatten_2D_to_1D( PCM.transposed() ) );
+      }
+  shared_glsl_code()            // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
+    { return `precision mediump float;
+              varying vec4 VERTEX_COLOR;
+      `;
+    }
+  vertex_glsl_code()           // ********* VERTEX SHADER *********
+    { return `
+        attribute vec4 color;
+        attribute vec3 object_space_pos;
+        uniform mat4 projection_camera_model_transform;
+
+        void main()
+        { gl_Position = projection_camera_model_transform * vec4(object_space_pos, 1.0);      // The vertex's final resting place (in NDCS).
+          VERTEX_COLOR = color;                                                               // Use the hard-coded color of the vertex.
+        }`;
+    }
+  fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    { return `
+        void main()
+        { gl_FragColor = VERTEX_COLOR;                                    // The interpolation gets done directly on the per-vertex colors.
+        }`;
+    }
+}

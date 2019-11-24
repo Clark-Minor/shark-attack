@@ -8,9 +8,15 @@
 <script src=   "main-scene.js" ></script>
 <style>
   * { font-family: monospace }
+  @font-face {
+    font-family: 'PixelFont';
+    src: url('assets/joystix.ttf');
+  }
   body { background: DarkGray }
   div { background: white }
-  canvas { width: 1080px; height: 600px; margin-bottom:-3px }
+  canvas { width: 1080px; height: 600px; margin-bottom:-3px}
+/*   #main-canvas canvas { z-index: 1 } */
+/*   #text-canvas canvas{ position: absolute; top: 7px; left: 7px; width: 1080px; height: 600px; margin-bottom:-3px; z-index:0 } */
   .canvas-widget { width: 1080px; background: DimGray }
   table { border-collapse: collapse; display:block; overflow-x: auto; }
   table.control-box { width: 1080px; border:0; margin:0; max-height:380px; transition:.5s; overflow-y:scroll; background:DimGray }
@@ -32,13 +38,17 @@
 </head><body>       <!-- Begin typing the next of your web page here. //-->
 
 <div id="main-canvas" class="canvas-widget"></div>
+<div id="text-canvas" class="canvas-widget"></div>
 <script> "use strict"     // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE ********************* 
                                            // Use this code to embed a widget into any web page.  The widget inclues a 3D WebGL area
                                            // (an HTML canvas) and various panels of controls.
-  const scenes = [ "Project_Scene" ];// First, list the names of scenes we will add to our canvas.  These will register themselves
+  const scenes = [ "Project_Scene" ]; // First, list the names of scenes we will add to our canvas.  These will register themselves
                                            // with this widget's Canvas_Manager so that their code can be called upon every time a 
                                            // draw / keyboard / mouse event happens on the web page.
-  new Canvas_Widget( "main-canvas", scenes );             // Use the Canvas_Widget class to display the WebGL demo.  Pass in
+  new Canvas_Widget( "main-canvas", "text-canvas", scenes );             // Use the Canvas_Widget class to display the WebGL demo.  Pass in
                                                           // the name of the HTML element we are to replace with the widget.
 </script>
+<div style="background: DarkGray; font-family: PixelFont;">PROJECT 22, CS174A</div>
 </body></html>
+
+<!-- COMMENT  -->
