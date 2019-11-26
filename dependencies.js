@@ -6,7 +6,7 @@ class Triangle extends Shape    // The simplest possible Shape – one triangle.
                                   // Next, supply vectors that point away from the triangle face.  They should match up with the points in
                                   // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at
                                   // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
-      this.positions      = [ Vec.of(0,0,0), Vec.of(5,0,0), Vec.of(0,5,0) ];
+      this.positions      = [ Vec.of(0,0,0), Vec.of(1,0,0), Vec.of(0,1,0) ];
       this.normals        = [ Vec.of(0,0,1), Vec.of(0,0,1), Vec.of(0,0,1) ];
       this.texture_coords = [ Vec.of(0,0),   Vec.of(1,0),   Vec.of(0,1)   ];
       this.indices        = [ 0, 1, 2 ];                         // Index into our vertices to connect them into a whole triangle.
@@ -16,24 +16,15 @@ class Triangle extends Shape    // The simplest possible Shape – one triangle.
     }
 }
 
-//**MY UPDATED TRIANGLE CLASS**//
-window.Triangle2 = window.classes.Triangle2 =
+window.Triangle2 = window.classes.Triangl2e =
 class Triangle2 extends Shape    // The simplest possible Shape – one triangle.  It has 3 vertices, each
-{ constructor(x1, y1, z1, x2, y2, z2, x3, y3, z3)                 // having their own 3D position, normal vector, and texture-space coordinate.
+{ constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
     { super( "positions", "normals", "texture_coords" );                       // Name the values we'll define per each vertex.
                                   // First, specify the vertex positions -- the three point locations of an imaginary triangle.
                                   // Next, supply vectors that point away from the triangle face.  They should match up with the points in
                                   // the above list.  Normal vectors are needed so the graphics engine can know if the shape is pointed at
                                   // light or not, and color it accordingly.  lastly, put each point somewhere in texture space too.
-      var i;
-        function triangle_loop()
-        {
-
-            return Vec.of(0,0,0);
-
-        }
-      this.positions      = [ Vec.of(x1,y1,z1), Vec.of(x2, y2, z2), Vec.of(x3, y3, z3) ];
-      //this.colors = [ Color.of(1,1,1,1), Color.of(1,1,1,1),Color.of(1,1,1,1), ];
+      this.positions      = [ Vec.of(0,0,0), Vec.of(-1,-0.5,0), Vec.of(-1,0.5,0) ];
       this.normals        = [ Vec.of(0,0,1), Vec.of(0,0,1), Vec.of(0,0,1) ];
       this.texture_coords = [ Vec.of(0,0),   Vec.of(1,0),   Vec.of(0,1)   ];
       this.indices        = [ 0, 1, 2 ];                         // Index into our vertices to connect them into a whole triangle.
@@ -42,7 +33,6 @@ class Triangle2 extends Shape    // The simplest possible Shape – one triangle
                  // told it how to connect vertex entries into triangles.  Every three indices in "this.indices" traces out one triangle.
     }
 }
-
 
 window.Square = window.classes.Square =
 class Square extends Shape              // A square, demonstrating two triangles that share vertices.  On any planar surface, the interior
@@ -588,5 +578,62 @@ class Basic_Shader extends Shader             // Subclasses of Shader each store
         void main()
         { gl_FragColor = VERTEX_COLOR;                                    // The interpolation gets done directly on the per-vertex colors.
         }`;
+    }
+}
+
+window.Cylindrical_Tube = window.classes.Cylindrical_Tube =
+class Cylindrical_Tube extends Surface_Of_Revolution    // An open tube shape with equally sized sections, pointing down Z locally.    
+  { constructor( rows, columns, texture_range ) { super( rows, columns, Vec.cast( [1, 0, .5], [1, 0, -.5] ), texture_range ); } }
+
+window.Closed_Cone = window.classes.Closed_Cone =
+class Closed_Cone extends Shape     // Combine a cone tip and a regular polygon to make a closed cone.
+  { constructor( rows, columns, texture_range )
+      { super( "positions", "normals", "texture_coords" );
+        Cone_Tip          .insert_transformed_copy_into( this, [ rows, columns, texture_range ]);    
+        Regular_2D_Polygon.insert_transformed_copy_into( this, [ 1, columns ], Mat4.rotation( Math.PI, Vec.of(0, 1, 0) )
+                                                                       .times( Mat4.translation([ 0, 0, 1 ]) ) ); } }
+window.Regular_2D_Polygon = window.classes.Regular_2D_Polygon =
+class Regular_2D_Polygon extends Surface_Of_Revolution  // Approximates a flat disk / circle
+  { constructor( rows, columns ) { super( rows, columns, Vec.cast( [0, 0, 0], [1, 0, 0] ) ); 
+                                   this.normals = this.normals.map( x => Vec.of( 0,0,1 ) );
+                                   this.texture_coords.forEach( (x, i, a) => a[i] = this.positions[i].map( x => x/2 + .5 ).slice(0,2) ); } }
+
+window.Cone_Tip = window.classes.Cone_Tip =
+class Cone_Tip extends Surface_Of_Revolution        // Note:  Touches the Z axis; squares degenerate into triangles as they sweep around.
+  { constructor( rows, columns, texture_range ) { super( rows, columns, Vec.cast( [0, 0, 1],  [1, 0, -1]  ), texture_range ); } }
+
+window.Rounded_Closed_Cone = window.classes.Rounded_Closed_Cone =
+class Rounded_Closed_Cone extends Surface_Of_Revolution   // An alternative without two separate sections
+  { constructor( rows, columns, texture_range ) { super( rows, columns, Vec.cast( [0, 0, 1], [1, 0, -1], [0, 0, -1] ), texture_range ) ; } }
+
+window.Capped_Cylinder = window.classes.Capped_Cylinder =
+class Capped_Cylinder extends Shape                       // Combine a tube and two regular polygons to make a closed cylinder.
+  { constructor( rows, columns, texture_range )           // Flat shade this to make a prism, where #columns = #sides.
+      { super( "positions", "normals", "texture_coords" );
+        Cylindrical_Tube  .insert_transformed_copy_into( this, [ rows, columns, texture_range ] );
+        //Regular_2D_Polygon.insert_transformed_copy_into( this, [ 1, columns ],                                                  Mat4.translation([ 0, 0, .5 ]) );
+        Regular_2D_Polygon.insert_transformed_copy_into( this, [ 1, columns ], Mat4.rotation( Math.PI, Vec.of(0, 1, 0) ).times( Mat4.translation([ 0, 0, .5 ]) ) ); } }
+
+window.Rounded_Capped_Cylinder = window.classes.Rounded_Capped_Cylinder =
+class Rounded_Capped_Cylinder extends Surface_Of_Revolution   // An alternative without three separate sections
+  { constructor ( rows, columns, texture_range ) { super( rows, columns, Vec.cast( [0, 0, .5], [1, 0, .5], [1, 0, -.5], [0, 0, -.5] ), texture_range ); } }
+  
+
+
+class Axis_Arrows extends Shape                                   // An axis set with arrows, made out of a lot of various primitives.
+{ constructor()
+    { super( "positions", "normals", "texture_coords" );
+      var stack = [];       
+      Subdivision_Sphere.insert_transformed_copy_into( this, [ 3 ], Mat4.rotation( Math.PI/2, Vec.of( 0,1,0 ) ).times( Mat4.scale([ .25, .25, .25 ]) ) );
+      this.drawOneAxis( Mat4.identity(),                                                            [[ .67, 1  ], [ 0,1 ]] );
+      this.drawOneAxis( Mat4.rotation(-Math.PI/2, Vec.of(1,0,0)).times( Mat4.scale([  1, -1, 1 ])), [[ .34,.66 ], [ 0,1 ]] );
+      this.drawOneAxis( Mat4.rotation( Math.PI/2, Vec.of(0,1,0)).times( Mat4.scale([ -1,  1, 1 ])), [[  0 ,.33 ], [ 0,1 ]] ); 
+    }
+  drawOneAxis( transform, tex )    // Use a different texture coordinate range for each of the three axes, so they show up differently.
+    { Closed_Cone     .insert_transformed_copy_into( this, [ 4, 10, tex ], transform.times( Mat4.translation([   0,   0,  2 ]) ).times( Mat4.scale([ .25, .25, .25 ]) ) );
+      Cube            .insert_transformed_copy_into( this, [ ],            transform.times( Mat4.translation([ .95, .95, .45]) ).times( Mat4.scale([ .05, .05, .45 ]) ) );
+      Cube            .insert_transformed_copy_into( this, [ ],            transform.times( Mat4.translation([ .95,   0, .5 ]) ).times( Mat4.scale([ .05, .05, .4  ]) ) );
+      Cube            .insert_transformed_copy_into( this, [ ],            transform.times( Mat4.translation([   0, .95, .5 ]) ).times( Mat4.scale([ .05, .05, .4  ]) ) );
+      Cylindrical_Tube.insert_transformed_copy_into( this, [ 7, 7,  tex ], transform.times( Mat4.translation([   0,   0,  1 ]) ).times( Mat4.scale([  .1,  .1,  2  ]) ) );
     }
 }

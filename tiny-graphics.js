@@ -1193,7 +1193,7 @@ class Canvas_Manager      // This class manages a whole graphics program for one
     {                            this.globals.graphics_state.animation_delta_time = time - this.prev_time;
       if( this.globals.animate ) this.globals.graphics_state.animation_time      += this.globals.graphics_state.animation_delta_time;
       this.prev_time = time;
-      this.gl.clearColor(0.6,1,1,1)//clearColor(0.6,1,1,0.1);
+      //this.gl.clearColor(0.6,1,1,1)//clearColor(0.6,1,1,0.1);
       this.gl.clear( this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);        // Clear the canvas's pixels and z-buffer.
      
       for( let live_string of document.querySelectorAll(".live_string") ) live_string.onload( live_string );
