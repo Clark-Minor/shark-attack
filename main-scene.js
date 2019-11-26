@@ -70,7 +70,7 @@ class Water extends Shape
 
      send_water(gl)
      {
-         this.copy_onto_graphics_card(gl, ["positions", "normals"], true);  
+         this.copy_onto_graphics_card(gl, ["positions", "normals"], true);
      }
 
 
@@ -97,7 +97,7 @@ class Body_Of_Water extends Shape
                  // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
                  // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
                  // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
-        this.indices.push( 0, 1, 2, 1, 3, 2,     //front        
+        this.indices.push( 0, 1, 2, 1, 3, 2,     //front
                            4, 5, 6, 5, 7, 6,    //back
                            8, 9, 10, 9, 11, 10,  //left
                            12, 13, 14, 13, 15, 14,  //right
@@ -108,9 +108,9 @@ class Body_Of_Water extends Shape
 }
 
 window.Octopus = window.classes.Octopus =
-class Octopus extends Shape    
-{ constructor()                 
-    { super( "positions", "normals", "texture_coords" );                       
+class Octopus extends Shape
+{ constructor()
+    { super( "positions", "normals", "texture_coords" );
       var head_t = Mat4.identity().times(Mat4.scale([3,3,3]))
       var leg_1_t = Mat4.identity().times(Mat4.translation(Vec.of(-2,0,-1.5)))
       leg_1_t = leg_1_t.times(Mat4.rotation(Math.PI/2,Vec.of(1,0,0)))
@@ -154,7 +154,7 @@ class Octopus_Eyes extends Shape
      { super( "positions", "normals", "texture_coords" );
      var eye_1_t = Mat4.identity().times(Mat4.translation(Vec.of(3,0,1))).times(Mat4.scale([.7,.7,.7]));
      var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(0,2,0)));
-      
+
      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_1_t);
      Subdivision_Sphere.insert_transformed_copy_into(this, [2], eye_2_t);
 
@@ -181,22 +181,22 @@ class Shark extends Shape
 }
 
 class Texture_Caustic extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER ********* 
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
     {
       // TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
       return `
         uniform sampler2D texture;
         void main()
         { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-          { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.            
+          { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
             return;
           }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
                                             // Phong shading is not to be confused with the Phong Reflection Model.
-   
+
           vec4 tex_color = texture2D( texture, f_tex_coord);                         // Sample the texture image in the correct place.
           vec3 bumped_N = normalize( N + tex_color.rgb - 0.5 * vec3(1,1,1) );
                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w ); 
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
           else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
           gl_FragColor.xyz += phong_model_lights( bumped_N );                     // Compute the final color with contributions from lights.
         }`;
@@ -274,7 +274,7 @@ class Project_Scene extends Scene_Component
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
         if( !context.globals.has_controls   )
           context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
-            
+
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
         context.globals.graphics_state.camera_transform = Mat4.translation([ -5,-5,-70 ]);
@@ -290,7 +290,16 @@ class Project_Scene extends Scene_Component
         this.height = 20; //z
         this.Height_Map = [];
         this.time = 0;
+
         this.gl = gl;
+
+        //OCTOPUS location
+        this.octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-2*Math.PI/3, Vec.of(0,0,1)));
+        this.go_forward = false;
+        this.go_backward = false;
+        this.go_left = false;
+        this.go_right = false;
+        this.octo_velocity = Vec.of(0,0,0);
 
         //random z for water//
         for(var i=0; i< this.rows; i++)
@@ -305,8 +314,8 @@ class Project_Scene extends Scene_Component
           }
           this.Height_Map.push(Row);
         }
-        
-        //for caustics//    
+
+        //for caustics//
         this.caustic_counter = 0;
         this.caustic_update = true;
         this.gif_ready = false;
@@ -316,7 +325,7 @@ class Project_Scene extends Scene_Component
             var img = new Image();
             img.src = "assets/Caustic/target-" + i + ".png";
         }
-        
+
 
 
         this.shapes = {  torus:  new Torus( 15, 15 ),
@@ -335,7 +344,7 @@ class Project_Scene extends Scene_Component
                          eyes: new Octopus_Eyes(),
 
                          shark: new Shark(),
-                         
+
                          wall: new Square(),
                          floor: new Square()
 
@@ -347,7 +356,7 @@ class Project_Scene extends Scene_Component
         // Make some Material objects available to you:
         this.materials =
           { axis_material:     context.get_instance( Phong_Shader ).material(Color.of(1,1,1,1)),
-            
+
             water_material:     context.get_instance( Phong_Shader ).material(Color.of( /*36/255, 171/255, 255/255,*/56/255, 213/255, 252/255, 0.6 ),
             {
               ambient: 0.6,
@@ -358,28 +367,28 @@ class Project_Scene extends Scene_Component
 
             wall_texture: context.get_instance( Phong_Shader ).material(Color.of(0, 0, 0, 1), //opaque black
             {
-                ambient: 1,  
+                ambient: 1,
                 texture: context.get_instance("assets/wall2.png", true) //true = trilinear filtering
             }),
 
             floor_texture: context.get_instance( Phong_Shader ).material(Color.of(0, 0, 0, 1), //opaque black
             {
-                ambient: 1,  
+                ambient: 1,
                 texture: context.get_instance("assets/sand.png", true) //true = trilinear filtering
             }),
 
             octopus_skin: context.get_instance( Phong_Shader ).material(Color.of(204/255,0,170/255,1),
             {
-                ambient: 1,  
+                ambient: 1,
                 //diffusivity: 1,
                 specular: 0.5,
             }),
 
             eye_material: context.get_instance( Phong_Shader ).material(Color.of(1,1,1,1), {ambient: 0.8}),
 
-            caustic_material: context.get_instance( Texture_Caustic ).material(Color.of( 0,0,0,1 ), 
+            caustic_material: context.get_instance( Texture_Caustic ).material(Color.of( 0,0,0,1 ),
             {
-                  ambient: 0.4, 
+                  ambient: 0.4,
                   texture: context.get_instance("assets/Caustic/target-0.png",true)
             }),
 
@@ -393,9 +402,9 @@ class Project_Scene extends Scene_Component
         //(position, color, size)
         //this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
         this.lights = [ new Light( Mat4.identity().times(Vec.of(1,1,1,1)), Color.of(1, .4, 1, 1), 1000 ) ];
-        
-//         this.lights = [ new Light( Vec.of( 0,5,5,1 ), Color.of( 1, .4, 1, 1 ), 100000 ), 
-//                         new Light( Vec.of( 0,5,5,-1 ), Color.of( 1, .4, 1, 1 ), 1000 ), 
+
+//         this.lights = [ new Light( Vec.of( 0,5,5,1 ), Color.of( 1, .4, 1, 1 ), 100000 ),
+//                         new Light( Vec.of( 0,5,5,-1 ), Color.of( 1, .4, 1, 1 ), 1000 ),
 //                         new Light( Mat4.identity().times(Vec.of( 100,5,80,1 )), Color.of( 1, .4, 1, 1 ), 100000 ),];
 
 
@@ -404,25 +413,64 @@ class Project_Scene extends Scene_Component
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
       { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
         this.new_line();
-        this.key_triggered_button( "Attach to planet 1", [ "1" ], () => this.attached = () => this.planet_1 );
-        this.key_triggered_button( "Attach to planet 2", [ "2" ], () => this.attached = () => this.planet_2 ); this.new_line();
-        this.key_triggered_button( "Attach to planet 3", [ "3" ], () => this.attached = () => this.planet_3 );
-        this.key_triggered_button( "Attach to planet 4", [ "4" ], () => this.attached = () => this.planet_4 ); this.new_line();
+        this.key_triggered_button( "Go Forward", [ "i" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
+        this.key_triggered_button( "Go Backward", [ "k" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
+        this.key_triggered_button( "Go Left", [ "j" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
+        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false); this.new_line();
         this.key_triggered_button( "Attach to planet 5", [ "5" ], () => this.attached = () => this.planet_5 );
         this.key_triggered_button( "Attach to moon",     [ "m" ], () => this.attached = () => this.moon     );
       }
 
-    draw_octopus(graphics_state)
+    update_scene(graphics_state, dt)
     {
-        var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-2*Math.PI/3, Vec.of(0,0,1)))
-        this.shapes.octopus.draw(graphics_state, octopus_t, this.materials.octopus_skin);
-        this.shapes.eyes.draw(graphics_state, octopus_t, this.materials.eye_material);
+      //DRAW OCTOPUS//
+
+      if (this.go_forward)
+      {
+        this.octo_velocity[0] = .25;
+      }
+      else if (this.go_backward)
+      {
+        this.octo_velocity[0] = -.25;
+      }
+      else
+      {
+        this.octo_velocity[0] = 0;
+      }
+
+      if(this.go_right)
+      {
+        this.octo_velocity[1] = .25;
+      }
+      else if (this.go_left)
+      {
+        this.octo_velocity[1] = -.25;
+      }
+      else {
+        this.octo_velocity[1] = 0;
+      }
+      var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-2*Math.PI/3, Vec.of(0,0,1)));
+      this.octopus_t = this.octopus_t.times(Mat4.translation(this.octo_velocity));
+
+      this.draw_octopus(graphics_state, this.octopus_t);
+
+      //DRAW SHARK//
+      var shark_t = Mat4.identity().times(Mat4.translation([5,5,1.25]));
+      this.draw_shark(graphics_state, shark_t);
+
     }
 
-    draw_shark(graphics_state)
+    draw_octopus(graphics_state, transform)
     {
-          var shark_t = Mat4.identity().times(Mat4.translation([5,5,1.25]))
-          this.shapes.shark.draw(graphics_state, shark_t, this.materials.shark_material);
+
+        this.shapes.octopus.draw(graphics_state, transform, this.materials.octopus_skin);
+        this.shapes.eyes.draw(graphics_state, transform, this.materials.eye_material);
+
+    }
+
+    draw_shark(graphics_state, transform)
+    {
+          this.shapes.shark.draw(graphics_state, transform, this.materials.shark_material);
     }
 
     draw_skybox(graphics_state)
@@ -449,9 +497,9 @@ class Project_Scene extends Scene_Component
                   {
                         if(j%2==0)
                         this.shapes.floor.draw(graphics_state, floor_transform.times(Mat4.translation([i,j,0])), this.materials.floor_texture);
-                  }        
+                  }
         }
-       
+
     }
 
     //PHASE SKETCH
@@ -466,7 +514,7 @@ class Project_Scene extends Scene_Component
           if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
               this.Height_Map[i][j] = this.Height_Map[i][j] - 0.05*Math.sin(phase + phase2 + 4.5*this.time);
         }
-    }    
+    }
 
 
     display( graphics_state )
@@ -477,8 +525,10 @@ class Project_Scene extends Scene_Component
 
         //just to orient ourselves, by origin
         this.shapes.axis.draw(graphics_state, Mat4.identity(), this.materials.axis_material);
-        
+
         this.flow_of_water();
+
+        //this.go_forward = false;
 
 //         //from surfaces_demo
 //         const random = ( x ) => Math.sin( 1000*x + graphics_state.animation_time/1000 );
@@ -495,16 +545,12 @@ class Project_Scene extends Scene_Component
 
         //this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([500,500,500])), this.materials.box_texture);
 
-        //DRAW OCTOPUS//
-        this.draw_octopus(graphics_state);
-
-        //DRAW SHARK//
-        this.draw_shark(graphics_state);
+        this.update_scene(graphics_state, this.time);
 
         //DRAW CAUSTICS//
         if (this.caustic_counter == 99)
             this.caustic_counter = 0;
-        
+
         if(this.caustic_update)
         {
             this.caustic_counter += 1;
@@ -514,26 +560,26 @@ class Project_Scene extends Scene_Component
             this.caustic_update = true;
 
          var caustic_str = "assets/Caustic/target-" + this.caustic_counter.toString() +  ".png";
-         
+
          if(!this.gif_ready)
          {
-            
+
             this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
                                                                      .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                      ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );   
+                                                      ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );
             this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
-                                                                     .times(Mat4.scale([ this.width/2, this.length/2, 1 ])) 
-                                                      ,this.materials.caustic_material);   
+                                                                     .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
+                                                      ,this.materials.caustic_material);
          }
          else
          {
              this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
                                                                       .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                       ,this.materials.caustic_material);   
+                                                       ,this.materials.caustic_material);
 
              this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
                                                                       .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                       ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));   
+                                                       ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));
          }
 
         //ours
@@ -547,7 +593,7 @@ class Project_Scene extends Scene_Component
         let tank_transform = Mat4.identity().times(Mat4.translation([this.width/2, this.length/2, -this.height/2]))
                                             .times(Mat4.scale([this.width/2, this.length/2, -this.height/2]));
         this.shapes.tank.draw(graphics_state, tank_transform, this.materials.water_material);
-        
+
         this.draw_skybox(graphics_state);
 
 
@@ -565,20 +611,20 @@ class Project_Scene extends Scene_Component
 window.Scene = window.classes.Scene
 class Scene
 {                           // **Scene** is the base class for any scene part or code snippet that you can add to a
-                            // canvas.  Make your own subclass(es) of this and override their methods "display()" 
+                            // canvas.  Make your own subclass(es) of this and override their methods "display()"
                             // and "make_control_panel()" to make them draw to a canvas, or generate custom control
                             // buttons and readouts, respectively.  Scenes exist in a hierarchy; their child Scenes
-                            // can either contribute more drawn shapes or provide some additional tool to the end 
+                            // can either contribute more drawn shapes or provide some additional tool to the end
                             // user via drawing additional control panel buttons or live text readouts.
   constructor()
     { this.children = [];
                                                           // Set up how we'll handle key presses for the scene's control panel:
-      const callback_behavior = ( callback, event ) => 
+      const callback_behavior = ( callback, event ) =>
            { callback( event );
              event.preventDefault();    // Fire the callback and cancel any default browser shortcut that is an exact match.
              event.stopPropagation();   // Don't bubble the event to parent nodes; let child elements be targetted in isolation.
            }
-      this.key_controls = new Keyboard_Manager( document, callback_behavior);     
+      this.key_controls = new Keyboard_Manager( document, callback_behavior);
     }
   new_line( parent=this.control_panel )       // new_line():  Formats a scene's control panel with a new line break.
     { parent.appendChild( document.createElement( "br" ) ) }
@@ -588,18 +634,18 @@ class Scene
                                                   // will constantly update all HTML elements made this way.
       parent.appendChild( Object.assign( document.createElement( "div"  ), { className:"live_string", onload: callback } ) );
     }
-  key_triggered_button( description, shortcut_combination, callback, color = '#'+Math.random().toString(9).slice(-6), 
+  key_triggered_button( description, shortcut_combination, callback, color = '#'+Math.random().toString(9).slice(-6),
                         release_event, recipient = this, parent = this.control_panel )
     {                                             // key_triggered_button():  Trigger any scene behavior by assigning
-                                                  // a key shortcut and a labelled HTML button to fire any callback 
+                                                  // a key shortcut and a labelled HTML button to fire any callback
                                                   // function/method of a Scene.  Optional release callback as well.
       const button = parent.appendChild( document.createElement( "button" ) );
       button.default_color = button.style.backgroundColor = color;
-      const  press = () => { Object.assign( button.style, { 'background-color' : 'red', 
+      const  press = () => { Object.assign( button.style, { 'background-color' : 'red',
                                                             'z-index': "1", 'transform': "scale(2)" } );
                              callback.call( recipient );
                            },
-           release = () => { Object.assign( button.style, { 'background-color' : button.default_color, 
+           release = () => { Object.assign( button.style, { 'background-color' : button.default_color,
                                                             'z-index': "0", 'transform': "scale(1)" } );
                              if( !release_event ) return;
                              release_event.call( recipient );
@@ -612,7 +658,7 @@ class Scene
       button.addEventListener( "touchend", release, { passive: true } );
       if( !shortcut_combination ) return;
       this.key_controls.add( shortcut_combination, press, release );
-    }                                                          
+    }
                                                 // To use class Scene, override at least one of the below functions,
                                                 // which will be automatically called by other classes:
   display( context, program_state )
@@ -647,7 +693,7 @@ class Shape_From_File extends Shape
       }
   parse_into_mesh( data )
     {                           // Adapted from the "webgl-obj-loader.js" library found online:
-      var verts = [], vertNormals = [], textures = [], unpacked = {};   
+      var verts = [], vertNormals = [], textures = [], unpacked = {};
 
       unpacked.verts = [];        unpacked.norms = [];    unpacked.textures = [];
       unpacked.hashindices = {};  unpacked.indices = [];  unpacked.index = 0;
@@ -670,24 +716,24 @@ class Shape_From_File extends Shape
           for (var j = 0, eleLen = elements.length; j < eleLen; j++)
           {
               if(j === 3 && !quad) {  j = 2;  quad = true;  }
-              if(elements[j] in unpacked.hashindices) 
+              if(elements[j] in unpacked.hashindices)
                   unpacked.indices.push(unpacked.hashindices[elements[j]]);
               else
               {
                   var vertex = elements[ j ].split( '/' );
 
                   unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 0]);
-                  unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 1]);   
+                  unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 1]);
                   unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 2]);
-                  
-                  if (textures.length) 
+
+                  if (textures.length)
                     {   unpacked.textures.push(+textures[( (vertex[1] - 1)||vertex[0]) * 2 + 0]);
                         unpacked.textures.push(+textures[( (vertex[1] - 1)||vertex[0]) * 2 + 1]);  }
-                  
+
                   unpacked.norms.push(+vertNormals[( (vertex[2] - 1)||vertex[0]) * 3 + 0]);
                   unpacked.norms.push(+vertNormals[( (vertex[2] - 1)||vertex[0]) * 3 + 1]);
                   unpacked.norms.push(+vertNormals[( (vertex[2] - 1)||vertex[0]) * 3 + 2]);
-                  
+
                   unpacked.hashindices[elements[j]] = unpacked.index;
                   unpacked.indices.push(unpacked.index);
                   unpacked.index += 1;
@@ -699,8 +745,8 @@ class Shape_From_File extends Shape
       {
       const { verts, norms, textures } = unpacked;
         for( var j = 0; j < verts.length/3; j++ )
-        { 
-          this.arrays.position     .push( vec3( verts[ 3*j ], verts[ 3*j + 1 ], verts[ 3*j + 2 ] ) );        
+        {
+          this.arrays.position     .push( vec3( verts[ 3*j ], verts[ 3*j + 1 ], verts[ 3*j + 2 ] ) );
           this.arrays.normal       .push( vec3( norms[ 3*j ], norms[ 3*j + 1 ], norms[ 3*j + 2 ] ) );
           this.arrays.texture_coord.push( vec( textures[ 2*j ], textures[ 2*j + 1 ] ) );
         }
@@ -710,22 +756,22 @@ class Shape_From_File extends Shape
       this.ready = true;
     }
   draw( context, program_state, model_transform, material )
-    {               // draw(): Same as always for shapes, but cancel all 
+    {               // draw(): Same as always for shapes, but cancel all
                     // attempts to draw the shape before it loads:
       if( this.ready )
         super.draw( context, program_state, model_transform, material );
     }
 }
 
-class Obj_File_Demo extends Scene     
+class Obj_File_Demo extends Scene
   {                           // **Obj_File_Demo** show how to load a single 3D model from an OBJ file.
                               // Detailed model files can be used in place of simpler primitive-based
                               // shapes to add complexity to a scene.  Simpler primitives in your scene
                               // can just be thought of as placeholders until you find a model file
-                              // that fits well.  This demo shows the teapot model twice, with one 
-                              // teapot showing off the Fake_Bump_Map effect while the other has a 
-                              // regular texture and Phong lighting.             
-    constructor()                               
+                              // that fits well.  This demo shows the teapot model twice, with one
+                              // teapot showing off the Fake_Bump_Map effect while the other has a
+                              // regular texture and Phong lighting.
+    constructor()
       { super();
                                       // Load the model file:
         this.shapes = { "octo": new Shape_From_File( "assets/Octopus.obj" ) };
@@ -733,22 +779,22 @@ class Obj_File_Demo extends Scene
                                       // Don't create any DOM elements to control this scene:
         this.widget_options = { make_controls: false };
                                                           // Non bump mapped:
-        this.stars = new Material( new defs.Textured_Phong( 1 ),  { color: color( .5,.5,.5,1 ), 
+        this.stars = new Material( new defs.Textured_Phong( 1 ),  { color: color( .5,.5,.5,1 ),
           ambient: .3, diffusivity: .5, specularity: .5, texture: new Texture( "assets/stars.png" ) });
                                                            // Bump mapped:
-        this.bumps = new Material( new defs.Fake_Bump_Map( 1 ), { color: color( .5,.5,.5,1 ), 
+        this.bumps = new Material( new defs.Fake_Bump_Map( 1 ), { color: color( .5,.5,.5,1 ),
           ambient: .3, diffusivity: .5, specularity: .5, texture: new Texture( "assets/stars.png" ) });
       }
     display( context, program_state )
       { const t = program_state.animation_time;
 
-        program_state.set_camera( Mat4.translation( 0,0,-5 ) );    // Locate the camera here (inverted matrix).                  
+        program_state.set_camera( Mat4.translation( 0,0,-5 ) );    // Locate the camera here (inverted matrix).
         program_state.projection_transform = Mat4.perspective( Math.PI/4, context.width/context.height, 1, 500 );
                                                 // A spinning light to show off the bump map:
-        program_state.lights = [ new Light( 
-                                 Mat4.rotation( t/300,   1,0,0 ).times( vec4( 3,2,10,1 ) ), 
+        program_state.lights = [ new Light(
+                                 Mat4.rotation( t/300,   1,0,0 ).times( vec4( 3,2,10,1 ) ),
                                              color( 1,.7,.7,1 ), 100000 ) ];
-        
+
         for( let i of [ -1, 1 ] )
         {                                       // Spin the 3D model shapes as well.
           const model_transform = Mat4.rotation( t/2000,   0,2,1 )
@@ -764,4 +810,3 @@ class Obj_File_Demo extends Scene
                                  +  "</p><p>One of these teapots is lit with bump mapping.  Can you tell which one?</p>";
     }
   }
-
