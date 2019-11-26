@@ -294,12 +294,18 @@ class Project_Scene extends Scene_Component
         this.gl = gl;
 
         //OCTOPUS location
-        this.octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-2*Math.PI/3, Vec.of(0,0,1)));
+        this.octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1)));
         this.go_forward = false;
         this.go_backward = false;
         this.go_left = false;
         this.go_right = false;
         this.octo_velocity = Vec.of(0,0,0);
+
+        //SHARK location
+        this.shark_t = [Mat4.identity().times(Mat4.translation([5,5,1.25])),
+        Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25]))
+        ];
+        this.shark_velocity = Vec.of(.25, 0, 0)
 
         //random z for water//
         for(var i=0; i< this.rows; i++)
@@ -413,8 +419,8 @@ class Project_Scene extends Scene_Component
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
       { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
         this.new_line();
-        this.key_triggered_button( "Go Forward", [ "i" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
-        this.key_triggered_button( "Go Backward", [ "k" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
+        this.key_triggered_button( "Go Forward", [ "k" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
+        this.key_triggered_button( "Go Backward", [ "i" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
         this.key_triggered_button( "Go Left", [ "j" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
         this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false); this.new_line();
         this.key_triggered_button( "Attach to planet 5", [ "5" ], () => this.attached = () => this.planet_5 );
@@ -449,15 +455,67 @@ class Project_Scene extends Scene_Component
       else {
         this.octo_velocity[1] = 0;
       }
+
       var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-2*Math.PI/3, Vec.of(0,0,1)));
-      this.octopus_t = this.octopus_t.times(Mat4.translation(this.octo_velocity));
+
+      console.log(this.octopus_t[0][3]);
+        if(this.octopus_t[1][3] > this.length - 5.5)
+        {
+          this.octopus_t[1][3] = this.length - 5.5;
+          this.octo_velocity[0] = 0;
+        }
+        if(this.octopus_t[1][3] < 5.5)
+        {
+          this.octopus_t[1][3] = 5.5
+          this.octo_velocity[0] = 0;
+        }
+        if(this.octopus_t[0][3] > this.width - 5.5)
+        {
+          this.octopus_t[0][3] = this.width - 5.5;
+          this.octo_velocity[1] = 0;
+        }
+        if(this.octopus_t[0][3] < 5.5)
+        {
+          this.octopus_t[0][3] = 5.5;
+          this.octo_velocity[1] = 0;
+        }
+
+      this.octopus_t =
+      this.octopus_t.times(Mat4.translation(this.octo_velocity));
 
       this.draw_octopus(graphics_state, this.octopus_t);
 
       //DRAW SHARK//
-      var shark_t = Mat4.identity().times(Mat4.translation([5,5,1.25]));
-      this.draw_shark(graphics_state, shark_t);
+      var i = 0;
+      for(i; i < this.shark_t.length; i++)
+      {
+        //console.log(shark);
+        this.shark_t[i] =
+        this.shark_t[i].times(Mat4.translation(this.shark_velocity));
 
+        var bounce_angle = Math.random() * 1.5 - .75;
+        if(this.shark_t[i][0][3] > this.width - 5)
+        {
+          this.shark_t[i][0][3] = this.width - 5;
+          this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
+        }
+        if(this.shark_t[i][0][3] < 5)
+        {
+          this.shark_t[i][0][3] = 5;
+          this.shark_t[i]= this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
+        }
+        if(this.shark_t[i][1][3] > this.length - 5)
+        {
+          this.shark_t[i][1][3] = this.length - 5;
+          this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
+        }
+        if(this.shark_t[i][1][3] < 5)
+        {
+          this.shark_t[i][1][3] = 5;
+          this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
+        }
+        this.draw_shark(graphics_state, this.shark_t[i]);
+      }
     }
 
     draw_octopus(graphics_state, transform)
