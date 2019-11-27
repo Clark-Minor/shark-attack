@@ -13,10 +13,6 @@ class Cube extends Shape    // A cube inserts six square strips into its arrays.
 }
 
 
-
-
-
-
 //SURFACE OF WATER//
 window.Water = window.classes.Water =
 class Water extends Shape
@@ -151,7 +147,7 @@ window.Octopus_Eyes = window.classes.Octopus_Eyes =
 class Octopus_Eyes extends Shape
 {
   constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
-     { super( "positions", "normals", "texture_coords" );
+   { super( "positions", "normals", "texture_coords" );
      var eye_1_t = Mat4.identity().times(Mat4.translation(Vec.of(3,0,1))).times(Mat4.scale([.7,.7,.7]));
      var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(0,2,0)));
 
@@ -183,7 +179,6 @@ class Shark extends Shape
 class Texture_Caustic extends Phong_Shader
 { fragment_glsl_code()           // ********* FRAGMENT SHADER *********
     {
-      // TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
       return `
         uniform sampler2D texture;
         void main()
@@ -273,7 +268,7 @@ class Project_Scene extends Scene_Component
   { constructor( context, control_box, gl, text_canvas )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
         if( !context.globals.has_controls   )
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
+          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );
 
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
@@ -282,7 +277,7 @@ class Project_Scene extends Scene_Component
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
 
-
+        //initially for water
         this.rows = 70;
         this.columns = 70;
         this.width = 95;  //x
@@ -290,8 +285,20 @@ class Project_Scene extends Scene_Component
         this.height = 20; //z
         this.Height_Map = [];
         this.time = 0;
-
         this.gl = gl;
+
+        //for text on display
+        this.ctx_2d = text_canvas.getContext("2d");
+        this.ctx_drawn = false;
+        this.minutes = 0;
+        this.seconds = 0;
+        this.timer = setTimeout( () => {this.addTime();}, 1000 );  //adds time after 1s
+        setTimeout( () => {	this.draw_time("#000");
+					        this.draw_kills("#000"); }, 900 );
+
+	    this.shark_kills = 0;
+        this.number_of_inks = 0;
+        this.octo_sinking = false;
 
         //OCTOPUS location
         this.octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1)));
@@ -301,13 +308,13 @@ class Project_Scene extends Scene_Component
         this.go_right = false;
         this.octo_velocity = Vec.of(0,0,0);
 
-        //SHARK location
+        //SHARKs location
         this.shark_t = [Mat4.identity().times(Mat4.translation([5,5,1.25])),
         Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25]))
         ];
         this.shark_velocity = Vec.of(.25, 0, 0)
 
-        //random z for water//
+        //random z for water (peaks and troughs)
         for(var i=0; i< this.rows; i++)
         {
           let Row = [];
@@ -354,7 +361,7 @@ class Project_Scene extends Scene_Component
                          wall: new Square(),
                          floor: new Square()
 
-                        }
+                      }
 
         this.context = context;
         this.submit_shapes( this.context, this.shapes );
@@ -406,8 +413,9 @@ class Project_Scene extends Scene_Component
           }
 
         //(position, color, size)
-        //this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
-        this.lights = [ new Light( Mat4.identity().times(Vec.of(1,1,1,1)), Color.of(1, .4, 1, 1), 1000 ) ];
+        this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
+        //this.lights = [ new Light( Vec.of( 25,25,100,1 ), Color.of( 0, 1, 1, 1 ), 10000 ) ];
+
 
 //         this.lights = [ new Light( Vec.of( 0,5,5,1 ), Color.of( 1, .4, 1, 1 ), 100000 ),
 //                         new Light( Vec.of( 0,5,5,-1 ), Color.of( 1, .4, 1, 1 ), 1000 ),
@@ -422,14 +430,13 @@ class Project_Scene extends Scene_Component
         this.key_triggered_button( "Go Forward", [ "k" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
         this.key_triggered_button( "Go Backward", [ "i" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
         this.key_triggered_button( "Go Left", [ "j" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
-        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false); this.new_line();
-        this.key_triggered_button( "Attach to planet 5", [ "5" ], () => this.attached = () => this.planet_5 );
-        this.key_triggered_button( "Attach to moon",     [ "m" ], () => this.attached = () => this.moon     );
+        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false); 
+        this.new_line();
       }
 
     update_scene(graphics_state, dt)
     {
-      //DRAW OCTOPUS//
+      //DRAW OCTOPUS with keyboard input for movement//
 
       if (this.go_forward)
       {
@@ -452,13 +459,15 @@ class Project_Scene extends Scene_Component
       {
         this.octo_velocity[1] = -.25;
       }
-      else {
+      else 
+      {
         this.octo_velocity[1] = 0;
       }
 
       var octopus_t = Mat4.identity().times(Mat4.translation(Vec.of(this.width/2,this.length/2,5))).times(Mat4.rotation(-2*Math.PI/3, Vec.of(0,0,1)));
 
-      console.log(this.octopus_t[0][3]);
+      //COLLISION DETECTION for boundaries of water
+      //console.log(this.octopus_t[0][3]);
         if(this.octopus_t[1][3] > this.length - 5.5)
         {
           this.octopus_t[1][3] = this.length - 5.5;
@@ -485,9 +494,8 @@ class Project_Scene extends Scene_Component
 
       this.draw_octopus(graphics_state, this.octopus_t);
 
-      //DRAW SHARK//
-      var i = 0;
-      for(i; i < this.shark_t.length; i++)
+      //DRAW SHARK freely moving with random component (bounce angle against boundaries of water)//
+      for(var i = 0; i < this.shark_t.length; i++)
       {
         //console.log(shark);
         this.shark_t[i] =
@@ -560,7 +568,77 @@ class Project_Scene extends Scene_Component
 
     }
 
-    //PHASE SKETCH
+    addTime()
+    {
+        this.seconds++;
+        if(this.seconds >= 60)
+        {
+            this.seconds = 0;
+            this.minutes++;
+            if(this.minutes >= 60)
+            {
+                this.minutes = 0;   //once 1 hour strikes, time starts over, maybe change this
+            }
+        }
+
+        this.draw_time("#000");
+        this.timer = setTimeout( () => {this.addTime();}, 1000 );
+    }
+
+    get_timeText()
+    {
+        //00:00
+        return (this.minutes ? (this.minutes > 9 ? this.minutes : "0" + this.minutes) : "00") + ":" + (this.seconds > 9 ? this.seconds : "0" + this.seconds);
+    }
+
+    draw_time(color, clear = true)
+    {
+        var timeText = this.get_timeText();
+        if(clear) 
+            this.ctx_2d.clearRect(880,0,200,200);
+
+        this.ctx_2d.fillStyle = color;
+        this.ctx_2d.textAlign = "center";
+        this.ctx_2d.font = "18px PixelFont";
+        this.ctx_2d.fillText(timeText, 1000, 50);
+    }
+
+    draw_kills(color, clear = true)
+    {
+        var text = "kills: " + this.shark_kills; 
+        if(clear) 
+            this.ctx_2d.clearRect(0,0,200,200);
+
+        this.ctx_2d.fillStyle= color;
+        this.ctx_2d.font = "18px PixelFont";
+        this.ctx_2d.fillText(text, 100, 50);
+        this.ctx_2d.font = "14px PixelFont";
+        this.ctx_2d.fillText("Help the Octopus survive!", 150, 520);
+        this.ctx_2d.fillText("Ink when in front", 150, 550);
+        this.ctx_2d.fillText("of the Sharks", 150, 580);
+    }
+
+    draw_gameOver()
+    {
+        this.ctx_drawn = true;
+        this.ctx_2d.fillStyle = "rgba(0.5,0.5,0.5,0.5)";
+        this.ctx_2d.fillRect(0,0,1080,600);
+        this.ctx_2d.strokeRect(0,0,1080,600);
+        this.ctx_2d.fillStyle="#fff";
+        this.ctx_2d.font = "30px PixelFont";
+        this.ctx_2d.textAlign = "center";
+        this.ctx_2d.fillText("GAME OVER", 540, 300);
+        this.ctx_2d.font = "18px PixelFont";
+        this.ctx_2d.fillText("Press x to restart", 540, 350);
+        this.ctx_2d.font = "14px PixelFont";
+        this.ctx_2d.fillText("time - " + this.get_timeText(), 540, 400);
+        this.ctx_2d.fillText("kills - " + this.shark_kills, 540, 420);
+        this.ctx_2d.fillText("shots fired - " + this.number_of_inks, 540, 440);
+        let accuracy = this.number_of_inks == 0 ? "N/A" : parseInt(100*this.shark_kills/this.number_of_inks) + "%"
+                 this.ctx_2d.fillText("accuracy - " + accuracy, 540, 460);
+    }
+
+    //water simulation
     flow_of_water()
     {
       for(var i = 0; i < this.rows; i++)
@@ -579,7 +657,6 @@ class Project_Scene extends Scene_Component
       { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
         this.time = t;
-
 
         //just to orient ourselves, by origin
         this.shapes.axis.draw(graphics_state, Mat4.identity(), this.materials.axis_material);
@@ -603,6 +680,7 @@ class Project_Scene extends Scene_Component
 
         //this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([500,500,500])), this.materials.box_texture);
 
+        //this already draws octopus and sharks
         this.update_scene(graphics_state, this.time);
 
         //DRAW CAUSTICS//
@@ -653,6 +731,12 @@ class Project_Scene extends Scene_Component
         this.shapes.tank.draw(graphics_state, tank_transform, this.materials.water_material);
 
         this.draw_skybox(graphics_state);
+
+        if(this.octo_sinking && !this.ctx_drawn)
+        {
+            this.draw_gameOver();
+            clearTimeout(this.timer);  //stops time
+        }
 
 
       }//end of display
