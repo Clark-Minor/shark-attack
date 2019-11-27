@@ -164,7 +164,7 @@ class Shark extends Shape
   constructor()
       { super("positions", "normals", "texture_coords");
             var body_t = Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([3,1,2]))
-            var head_t = Mat4.identity().times(Mat4.translation([3.5,0,0])).times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0))).times(Mat4.scale([1,1.1,1]))
+            var head_t = Mat4.identity().times(Mat4.translation([3.2,0,0])).times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0))).times(Mat4.scale([1,1.1,1]))
             var bottom_t = Mat4.identity().times(Mat4.translation([-3,0,0])).times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0))).times(Mat4.scale([1,1.1,1]))
             var tail_t = Mat4.identity().times(Mat4.translation([-3,0,0])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([1.5,1.5,1.5]))
             var fin_t = Mat4.identity().times(Mat4.translation([0,0,0.3])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([2,2,2]))
@@ -414,8 +414,9 @@ class Project_Scene extends Scene_Component
 
         //(position, color, size)
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
-        //this.lights = [ new Light( Vec.of( 25,25,100,1 ), Color.of( 0, 1, 1, 1 ), 10000 ) ];
-
+        //this.lights = [ new Light( Vec.of( 0,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
+        //                new Light( Vec.of( this.width/2,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
+        //                new Light( Vec.of( 0,this.length/2,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
 
 //         this.lights = [ new Light( Vec.of( 0,5,5,1 ), Color.of( 1, .4, 1, 1 ), 100000 ),
 //                         new Light( Vec.of( 0,5,5,-1 ), Color.of( 1, .4, 1, 1 ), 1000 ),
@@ -523,7 +524,26 @@ class Project_Scene extends Scene_Component
           this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
         }
         this.draw_shark(graphics_state, this.shark_t[i]);
+        //console.log(this.octopus_t)
+       
       }
+    }
+
+    collision_detection(shark)
+    {
+        var octo_rect = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], width:3.5, height:3.5}
+        var shark_rect = {x:shark[0], y:shark[1], width:2, height:4}
+
+        console.log(shark) 
+     
+        if(octo_rect.x < shark_rect.x + shark_rect.width &&
+            octo_rect.x + octo_rect.width > shark_rect.x &&
+            octo_rect.y < shark_rect.y + shark_rect.height &&
+            octo_rect.y + octo_rect.height > shark_rect.y){
+                      
+                this.ctx_drawn = !this.ctx_drawn;
+                this.draw_gameOver();
+            }
     }
 
     draw_octopus(graphics_state, transform)
@@ -682,6 +702,15 @@ class Project_Scene extends Scene_Component
 
         //this already draws octopus and sharks
         this.update_scene(graphics_state, this.time);
+
+        for(var shark of this.shark_t)
+        {
+            var shark_pos = Vec.of(shark[0][3],shark[1][3],shark[2][3]);
+            this.collision_detection(shark_pos);
+            //console.log(shark_pos)
+        }
+
+
 
         //DRAW CAUSTICS//
         if (this.caustic_counter == 99)
