@@ -359,7 +359,8 @@ class Project_Scene extends Scene_Component
                          shark: new Shark(),
 
                          wall: new Square(),
-                         floor: new Square()
+                         floor: new Square(),
+                         hitbox: new Square()
 
                       }
 
@@ -431,7 +432,7 @@ class Project_Scene extends Scene_Component
         this.key_triggered_button( "Go Forward", [ "k" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
         this.key_triggered_button( "Go Backward", [ "i" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
         this.key_triggered_button( "Go Left", [ "j" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
-        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false); 
+        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false);
         this.new_line();
       }
 
@@ -460,7 +461,7 @@ class Project_Scene extends Scene_Component
       {
         this.octo_velocity[1] = -.25;
       }
-      else 
+      else
       {
         this.octo_velocity[1] = 0;
       }
@@ -498,6 +499,8 @@ class Project_Scene extends Scene_Component
       //DRAW SHARK freely moving with random component (bounce angle against boundaries of water)//
       for(var i = 0; i < this.shark_t.length; i++)
       {
+        //if(is_sunk[i])
+          //break;
         //console.log(shark);
         this.shark_t[i] =
         this.shark_t[i].times(Mat4.translation(this.shark_velocity));
@@ -525,24 +528,30 @@ class Project_Scene extends Scene_Component
         }
         this.draw_shark(graphics_state, this.shark_t[i]);
         //console.log(this.octopus_t)
-       
+
       }
     }
 
-    collision_detection(shark)
+    collision_detection(graphics_state, shark)
     {
-        var octo_rect = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], width:3.5, height:3.5}
-        var shark_rect = {x:shark[0], y:shark[1], width:2, height:4}
+        var octo_rect = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], width:4, height:4}
+        var shark_rect = {x:shark[0], y:shark[1], width:4, height:4}
 
-        console.log(shark) 
-     
+        //console.log(shark)
+        this.shapes.hitbox.draw(graphics_state, this.octopus_t.times(Mat4.scale(Vec.of(4,4,20))),
+         this.materials.shark_material);
+        this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(this.shark_t[0]).times(Mat4.scale(Vec.of(4,2,0))), this.materials.octopus_skin)
+        this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(Mat4.translation(Vec.of(this.shark_t[1][0][3],this.shark_t[1][1][3],0))).times(Mat4.scale(Vec.of(4,2,0))), this.materials.octopus_skin)
+
         if(octo_rect.x < shark_rect.x + shark_rect.width &&
             octo_rect.x + octo_rect.width > shark_rect.x &&
             octo_rect.y < shark_rect.y + shark_rect.height &&
-            octo_rect.y + octo_rect.height > shark_rect.y){
-                      
-                this.ctx_drawn = !this.ctx_drawn;
-                this.draw_gameOver();
+            octo_rect.y + octo_rect.height > shark_rect.y
+          && this.octopus_t[2][3] - shark[2] == 3.75){
+
+                //this.ctx_drawn = !this.ctx_drawn;
+                this.graphics_state.animate = 0
+                //this.draw_gameOver();
             }
     }
 
@@ -614,7 +623,7 @@ class Project_Scene extends Scene_Component
     draw_time(color, clear = true)
     {
         var timeText = this.get_timeText();
-        if(clear) 
+        if(clear)
             this.ctx_2d.clearRect(880,0,200,200);
 
         this.ctx_2d.fillStyle = color;
@@ -625,8 +634,8 @@ class Project_Scene extends Scene_Component
 
     draw_kills(color, clear = true)
     {
-        var text = "kills: " + this.shark_kills; 
-        if(clear) 
+        var text = "kills: " + this.shark_kills;
+        if(clear)
             this.ctx_2d.clearRect(0,0,200,200);
 
         this.ctx_2d.fillStyle= color;
@@ -706,7 +715,7 @@ class Project_Scene extends Scene_Component
         for(var shark of this.shark_t)
         {
             var shark_pos = Vec.of(shark[0][3],shark[1][3],shark[2][3]);
-            this.collision_detection(shark_pos);
+            this.collision_detection(graphics_state, shark_pos);
             //console.log(shark_pos)
         }
 
