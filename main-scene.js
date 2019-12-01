@@ -229,6 +229,7 @@ class Texture_Caustic extends Phong_Shader
 
           vec4 tex_color = texture2D( texture, f_tex_coord);                         // Sample the texture image in the correct place.
           vec3 bumped_N = normalize( N + tex_color.rgb - 0.5 * vec3(1,1,1) );
+
                                                                                      // Compute an initial (ambient) color:
           if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
           else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
@@ -277,7 +278,7 @@ class Project_Scene extends Scene_Component
 
         //for text on display
         this.ctx_2d = text_canvas.getContext("2d");
-        this.isGameOver = false;
+        //this.isGameOver = false;
         this.minutes = 0;
         this.seconds = 0;
         this.timer = setTimeout( () => {this.addTime();}, 1000 );  //adds time after 1s
@@ -327,24 +328,30 @@ class Project_Scene extends Scene_Component
             img.src = "assets/Caustic/target-" + i + ".png";
         }
 
+        //for smoke//
+        this.smoke_counter = 0;
+        this.smoke_update = true;
+        this.gif_ready_smoke = false;
+        setTimeout( () => { this.gif_ready_smoke = true; }, 20000 );
+        for(var i = 0; i < 14; i++)
+        {
+            var img = new Image();
+            img.src = "assets/Smoke/" + i + ".png";
+        }
 
 
-        this.shapes = {  torus:  new Torus( 15, 15 ),
-                         torus2: new ( Torus.prototype.make_flat_shaded_version() )( 15, 15 ),
 
-                         // TODO:  Fill in as many additional shape instances as needed in this key/value table.
-                         //        (Requirement 1)
-                         axis: new Axis_Arrows(),
+        this.shapes = {  axis: new Axis_Arrows(),
 
                          water: new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.Height_Map),
                          caustic: new Square(),
                          tank: new Body_Of_Water(),
-                         //skybox: new Cube(),
                          tankedge: new Edge_Of_Tank(),
 
                          octopus: new Octopus(),
                          eyes: new Octopus_Eyes(),
                          pupil: new Octopus_Pupil(),
+                         smoke: new Square(),
 
                          shark: new Shark(),
 
@@ -369,7 +376,7 @@ class Project_Scene extends Scene_Component
               smoothness: 80   //fuck is the difference???
             }),
 
-            edge_material: context.get_instance(Phong_Shader).material(Color.of(0,0,0.5,1), {ambient: 1}),
+            edge_material: context.get_instance(Phong_Shader).material(Color.of(158/255,215/255,1,1), {ambient: 1}),
 
             wall_texture: context.get_instance( Phong_Shader ).material(Color.of(0, 0, 0, 1), //opaque black
             {
@@ -386,13 +393,13 @@ class Project_Scene extends Scene_Component
             octopus_skin: context.get_instance( Phong_Shader ).material(Color.of(/*204/255,0,170/255*/ 235/255,84/255,150/255,1),
             {
                 ambient: 0.8,
-                //diffusivity: 0.8,
+                //diffusivity: 0.5,
                 //specular: 0.5,
             }),
 
             eye_material: context.get_instance( Phong_Shader ).material(Color.of(1,1,1,1), {ambient: 0.8}),
+            
             pupil_material: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 0.8}),
-
 
             caustic_material: context.get_instance( Texture_Caustic ).material(Color.of( 0,0,0,1 ),
             {
@@ -405,12 +412,18 @@ class Project_Scene extends Scene_Component
                   ambient: 0.5,
             }),
 
+            smoke_material: context.get_instance(Phong_Shader).material(Color.of(1,1,1,1), 
+            {
+                  ambient: 1,
+                  texture: context.get_instance("assets/Smoke/0.png",true)
+            }),
+
           }
 
         //(position, color, size) 
         this.lights = [ //new Light( Vec.of( this.width/2,this.length/2,0,1 ), Color.of( 1, 0.4, 1, 1 ), 100000 ), 
                         //new Light( Vec.of( this.width/2,this.length/2,0,-1 ), Color.of( 1, 0.4, 1, 1 ), 1000 ),
-                        new Light( Vec.of( 70,95,10,1 ), Color.of( 1, .4, 1, 1 ), 100000 ) 
+                        new Light( Vec.of( 70,95,10,1 ), Color.of( 0, 1, 1, 1 ), 100000 ) 
                         ];
         //this.lights = [ new Light( Vec.of( 0,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
         //                new Light( Vec.of( this.width/2,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
@@ -547,7 +560,7 @@ class Project_Scene extends Scene_Component
           && this.octopus_t[2][3] - shark[2] == 3.75){
 
                 //this.graphics_state.animate = 0
-                this.isGameOver = !this.isGameOver;
+                //this.isGameOver = !this.isGameOver;
                 this.draw_gameOver();
                 clearTimeout(this.timer); 
             }
@@ -569,25 +582,27 @@ class Project_Scene extends Scene_Component
 
     draw_skybox(graphics_state)
     {
-        var wall_transform = Mat4.identity().times(Mat4.translation([0, 700, 75])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width*3,this.width*3,0]))
+        var wall_transform = Mat4.identity().times(Mat4.translation([10, 700, 75])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width,this.width,0]))
         for(var i = 0; i < 9; i++)
         {
             if(i%2==0)
-            this.shapes.wall.draw(graphics_state, wall_transform.times(Mat4.translation([i,0,0])), this.materials.wall_texture);
+            
+            this.shapes.wall.draw(graphics_state, wall_transform.times(Mat4.translation([i-2,0,0])), this.materials.wall_texture);
+
         }
 
-        var wall2_transform = Mat4.identity().times(Mat4.translation([700, 400, 75])).times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1))).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width*3,this.width*3,0]))
+        var wall2_transform = Mat4.identity().times(Mat4.translation([670, 415, 75])).times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1))).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width,this.width,0]))
         for(var i = 0; i < 9; i++)
         {
             if(i%2==0)
-            this.shapes.wall.draw(graphics_state, wall2_transform.times(Mat4.translation([i,0,0])), this.materials.wall_texture);
+            this.shapes.wall.draw(graphics_state, wall2_transform.times(Mat4.translation([i-2,0,0])), this.materials.wall_texture);
         }
 
         var floor_transform = Mat4.identity().times(Mat4.translation([0,0,-this.height - 0.1])).times(Mat4.scale([15,15,0]))
         for(var i = -2; i < 50; i++) //x axis
         {
             if(i%2==0)
-                  for(var j = -2; j < 50; j++) //y axis
+                  for(var j = -2; j < 51; j++) //y axis
                   {
                         if(j%2==0)
                         this.shapes.floor.draw(graphics_state, floor_transform.times(Mat4.translation([i,j,0])), this.materials.floor_texture);
@@ -648,7 +663,7 @@ class Project_Scene extends Scene_Component
 
     draw_gameOver()
     {
-        this.isGameOver = true;
+        //this.isGameOver = true;
         this.ctx_2d.fillStyle = "rgba(0.5,0.5,0.5,0.2)";
         this.ctx_2d.fillRect(0,0,1080,600);
         this.ctx_2d.strokeRect(0,0,1080,600);
@@ -687,7 +702,7 @@ class Project_Scene extends Scene_Component
         this.time = t;
 
         //just to orient ourselves, by origin
-        this.shapes.axis.draw(graphics_state, Mat4.identity(), this.materials.axis_material);
+        //this.shapes.axis.draw(graphics_state, Mat4.identity(), this.materials.axis_material);
 
         this.flow_of_water();
 
@@ -703,10 +718,9 @@ class Project_Scene extends Scene_Component
         //CREATE NEW WATER SHAPE
         this.shapes.water = new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.Height_Map);
         this.shapes.water.send_water(this.gl);
-        //this.shapes.tankedge.draw(graphics_state, Mat4.identity().times(Mat4.translation([this.width/2,this.length/2,1.5])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width/2, 1.5, this.length/2])), this.materials.edge_material);
+        this.shapes.tankedge.draw(graphics_state, Mat4.identity().times(Mat4.translation([this.width/2,this.length/2,1.6])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width/2, 1.5, this.length/2])), this.materials.edge_material);
 
 
-        //this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([500,500,500])), this.materials.box_texture);
 
         //this already draws octopus and sharks
         this.update_scene(graphics_state, this.time);
@@ -734,25 +748,35 @@ class Project_Scene extends Scene_Component
 
          var caustic_str = "assets/Caustic/target-" + this.caustic_counter.toString() +  ".png";
 
+         var caustic_transform = Mat4.identity().times(Mat4.translation([ this.width/8, this.length/8, -this.height ]))
+                                                .times(Mat4.scale([ this.width/8, this.length/8, 1 ]));
          if(!this.gif_ready)
          {
-
-            this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
-                                                                     .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                      ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );
-            this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
-                                                                     .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                      ,this.materials.caustic_material);
+            for(var i = 0; i < 7; i++)
+            {
+                for(var j = 0; j < 7; j++)
+                {
+                    if(i%2==0 && j%2==0)
+                    {
+                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );
+                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material);
+                    }
+                }
+            }
          }
          else
          {
-             this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
-                                                                      .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                       ,this.materials.caustic_material);
-
-             this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
-                                                                      .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
-                                                       ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));
+             for(var i = 0; i < 7; i++)
+            {
+                for(var j = 0; j < 7; j++)
+                {
+                    if(i%2==0 && j%2==0)
+                    {
+                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material);
+                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));
+                    }
+                }
+            }
          }
 
         //ours
@@ -769,11 +793,37 @@ class Project_Scene extends Scene_Component
 
         this.draw_skybox(graphics_state);
 
-        if(this.octo_sinking && !this.isGameOver)
+
+        //DRAW SMOKE//
+        if (this.smoke_counter == 13)
+            this.smoke_counter = 0;
+
+        if(this.smoke_update)
         {
-            this.draw_gameOver();
-            clearTimeout(this.timer);  //stops time
+            this.smoke_counter += 1;
+            this.smoke_update = false;
         }
+        else
+            this.smoke_update = true;
+
+         var smoke_str = "assets/Smoke/" + this.smoke_counter.toString() +  ".png";
+
+         var smoke_transform = Mat4.identity().times(Mat4.translation([0,0,10])).times(Mat4.scale([3,3,0]))
+         if(!this.gif_ready_smoke)
+         {
+
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}) );
+            
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
+         }
+         else
+         {
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
+
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}));
+         }
+         //console.log(smoke_str)
+
 
 
       }//end of display
