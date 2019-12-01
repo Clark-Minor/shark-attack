@@ -297,6 +297,9 @@ class Project_Scene extends Scene_Component
         this.go_right = false;
         this.octo_velocity = Vec.of(0,0,0);
 
+        //INK location
+        this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5]));
+
         //SHARKs location
         this.shark_t = [Mat4.identity().times(Mat4.translation([5,5,1.25])),
         Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25]))
@@ -332,7 +335,7 @@ class Project_Scene extends Scene_Component
         this.smoke_counter = 0;
         this.smoke_update = true;
         this.gif_ready_smoke = false;
-        setTimeout( () => { this.gif_ready_smoke = true; }, 20000 );
+        setTimeout( () => { this.gif_ready_smoke = true; }, 200000 );
         for(var i = 0; i < 14; i++)
         {
             var img = new Image();
@@ -439,11 +442,12 @@ class Project_Scene extends Scene_Component
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
       { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
         this.new_line();
-        this.key_triggered_button( "Go Forward", [ "k" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
-        this.key_triggered_button( "Go Backward", [ "i" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
-        this.key_triggered_button( "Go Left", [ "j" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
-        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false);
+        this.key_triggered_button( "Go Forward", [ "s" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
+        this.key_triggered_button( "Go Backward", [ "w" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
+        this.key_triggered_button( "Go Left", [ "a" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
+        this.key_triggered_button( "Go Right", [ "d" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false);
         this.new_line();
+        this.key_triggered_button("Ink", [" "], () => this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5])), () => this.smoke_update = true, () => this.smoke_counter = 0);
       }
 
     update_scene(graphics_state, dt)
@@ -573,6 +577,43 @@ class Project_Scene extends Scene_Component
         this.shapes.eyes.draw(graphics_state, transform, this.materials.eye_material);
         this.shapes.pupil.draw(graphics_state, transform, this.materials.pupil_material);
 
+    }
+
+    draw_ink(graphics_state, transform)
+    {
+        /*if (this.smoke_counter >= 13)
+            this.smoke_counter = 0;
+    */
+        if(this.smoke_update)
+        {
+            //console.log("a")
+            this.smoke_counter += 1;
+            this.smoke_counter = this.smoke_counter%13;
+            this.smoke_update = false;
+        }
+        else
+            //console.log("b")
+            this.smoke_update = true;
+
+        
+
+         var smoke_str = "assets/Smoke/" + this.smoke_counter.toString() +  ".png";
+
+         var smoke_transform = transform
+         //Mat4.identity().times(Mat4.translation([0,0,10])).times(Mat4.scale([3,3,0]))
+         if(!this.gif_ready_smoke)
+         {
+
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}) );
+            
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
+         }
+         else
+         {
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
+
+            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}));
+         }
     }
 
     draw_shark(graphics_state, transform)
@@ -735,7 +776,7 @@ class Project_Scene extends Scene_Component
 
 
         //DRAW CAUSTICS//
-        if (this.caustic_counter == 99)
+        if (this.caustic_counter >= 99)
             this.caustic_counter = 0;
 
         if(this.caustic_update)
@@ -793,8 +834,9 @@ class Project_Scene extends Scene_Component
 
         this.draw_skybox(graphics_state);
 
-
+        this.draw_ink(graphics_state, this.ink_t);
         //DRAW SMOKE//
+        /*
         if (this.smoke_counter == 13)
             this.smoke_counter = 0;
 
@@ -823,7 +865,7 @@ class Project_Scene extends Scene_Component
             this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}));
          }
          //console.log(smoke_str)
-
+*/
 
 
       }//end of display
