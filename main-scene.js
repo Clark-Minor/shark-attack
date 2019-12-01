@@ -282,8 +282,8 @@ class Project_Scene extends Scene_Component
         this.minutes = 0;
         this.seconds = 0;
         this.timer = setTimeout( () => {this.addTime();}, 1000 );  //adds time after 1s
-        setTimeout( () => {	this.draw_time("#000");
-					        this.draw_kills("#000"); }, 900 );
+        setTimeout( () => {	this.draw_time("#595751");
+					        this.draw_kills("#595751"); }, 900 );
 
 	    this.shark_kills = 0;
         this.number_of_inks = 0;
@@ -321,7 +321,7 @@ class Project_Scene extends Scene_Component
         this.caustic_counter = 0;
         this.caustic_update = true;
         this.gif_ready = false;
-        setTimeout( () => { this.gif_ready = true; }, 20000 );
+        setTimeout( () => { this.gif_ready = true; }, 5000 );
         for(var i = 0; i < 100; i++)
         {
             var img = new Image();
@@ -624,7 +624,7 @@ class Project_Scene extends Scene_Component
             }
         }
 
-        this.draw_time("#000");
+        this.draw_time("#595751");
         this.timer = setTimeout( () => {this.addTime();}, 1000 );
     }
 
