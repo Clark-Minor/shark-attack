@@ -229,12 +229,12 @@ window.Project_Scene = window.classes.Project_Scene =
 class Project_Scene extends Scene_Component
   { constructor( context, control_box, gl, text_canvas )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
-        /*if( !context.globals.has_controls   )
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );*/
+        if( !context.globals.has_controls   )
+          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );
 
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
-        context.globals.graphics_state.camera_transform = Mat4.translation([ 0,0,-50 ])    //forward backward  
+        context.globals.graphics_state.camera_transform = Mat4.translation([ 0,0,-50 ])    //forward backward
                                                     .times(Mat4.translation([ 0,-25,0 ]))  //up down, -25
                                                     .times(Mat4.translation([ -19,0,0 ]))  //left right,-20
                                                     .times(Mat4.rotation(-1.2, Vec.of(1,0,0)))  //angle up down
@@ -282,10 +282,15 @@ class Project_Scene extends Scene_Component
         Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25])),
         Mat4.identity().times(Mat4.translation([this.width-5,5,1.25])),
         Mat4.identity().times(Mat4.translation([5,this.length-5,1.25])),
+        Mat4.identity().times(Mat4.translation([5,5,1.25])).times(Mat4.rotation(Math.PI/4,Vec.of(0,0,1))),
+        Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25])).times(Mat4.rotation(Math.PI/4,Vec.of(0,0,1))),
+        Mat4.identity().times(Mat4.translation([this.width-5,5,1.25])).times(Mat4.rotation(Math.PI/4,Vec.of(0,0,1))),
+        Mat4.identity().times(Mat4.translation([5,this.length-5,1.25])).times(Mat4.rotation(Math.PI/4,Vec.of(0,0,1)))
         ];
-        this.shark_bounce = [0,0,0,0]
-        this.shark_velocity = [Vec.of(.4, 0, 0),Vec.of(.25, 0, 0),Vec.of(.4, 0, 0),Vec.of(.25, 0, 0)]
-        this.is_sunk = [false,false,false,false]
+        this.shark_bounce = [0,0,0,0,0,0,0,0,0];
+        this.shark_velocity = [Vec.of(.4, 0, 0),Vec.of(.7, 0, 0),Vec.of(.3, 0, 0),Vec.of(.3, 0, 0),
+                                Vec.of(.5, 0, 0),Vec.of(.5, 0, 0),Vec.of(.7, 0, 0),Vec.of(.5, 0, 0)]
+        this.is_sunk = [false,false,false,false,false,false,false,false]
 
         //random z for water (peaks and troughs)
         for(var i=0; i< this.rows; i++)
@@ -491,8 +496,12 @@ class Project_Scene extends Scene_Component
           this.octo_velocity[1] = 0;
         }
 
-      this.octopus_t =
-      this.octopus_t.times(Mat4.translation(this.octo_velocity));
+      if(this.octopus_t[2][3] >= -this.height + 4.5)
+      {
+        this.octopus_t =
+        this.octopus_t.times(Mat4.translation(this.octo_velocity));
+      }
+
 
       this.draw_octopus(graphics_state, this.octopus_t);
 
@@ -502,6 +511,7 @@ class Project_Scene extends Scene_Component
         //if(is_sunk[i])
           //break;
         //console.log(shark);
+        if(this.shark_t[i][2][3] >= -this.height + 2.5)
         this.shark_t[i] =
         this.shark_t[i].times(Mat4.translation(this.shark_velocity[i]));
 
@@ -563,6 +573,7 @@ class Project_Scene extends Scene_Component
 
                 //this.graphics_state.animate = 0
                 //this.isGameOver = !this.isGameOver;
+                this.octo_velocity = Vec.of(0,0,-.25)
                 this.draw_gameOver();
                 clearTimeout(this.timer);
             }
