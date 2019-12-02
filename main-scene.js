@@ -255,7 +255,7 @@ class Project_Scene extends Scene_Component
         this.gl = gl;
 
         //for text on display
-        this.ctx_2d = text_canvas.getContext("2d");
+        this.textcanvas = text_canvas.getContext("2d");
         this.isGameOver = false;
         this.minutes = 0;
         this.seconds = 0;
@@ -293,17 +293,14 @@ class Project_Scene extends Scene_Component
         this.is_sunk = [false,false,false,false,false,false,false,false]
 
         //random z for water (peaks and troughs)
-        for(var i=0; i< this.rows; i++)
+        for(var i = 0; i < this.rows; i++)
         {
-          let Row = [];
-          for(var j=0; j< this.columns; j++)
+          let rowArr = [];
+          for(var j = 0; j < this.columns; j++)
           {
-            if(i>0 && i<this.rows-1 && j>0 && j<this.columns-1)
-                Row.push(3*Math.random());
-            else
-                Row.push(0);
+                rowArr.push(3*Math.random());  //height varies from 0 to 3
           }
-          this.flow_height.push(Row);
+          this.flow_height.push(rowArr);
         }
 
         //for caustics//
@@ -420,13 +417,6 @@ class Project_Scene extends Scene_Component
                         //new Light( Vec.of( this.width/2,this.length/2,0,-1 ), Color.of( 1, 0.4, 1, 1 ), 1000 ),
                         new Light( Vec.of( 70,95,10,1 ), Color.of( 0, 1, 1, 1 ), 100000 )
                         ];
-        //this.lights = [ new Light( Vec.of( 0,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
-        //                new Light( Vec.of( this.width/2,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
-        //                new Light( Vec.of( 0,this.length/2,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
-
-//         this.lights = [ new Light( Vec.of( 0,5,5,1 ), Color.of( 1, .4, 1, 1 ), 100000 ),
-//                         new Light( Vec.of( 0,5,5,-1 ), Color.of( 1, .4, 1, 1 ), 1000 ),
-//                         new Light( Mat4.identity().times(Vec.of( 100,5,80,1 )), Color.of( 1, .4, 1, 1 ), 100000 ),];
 
 
       } //end of constructor
@@ -690,10 +680,6 @@ class Project_Scene extends Scene_Component
         {
             this.seconds = 0;
             this.minutes++;
-            if(this.minutes >= 60)
-            {
-                this.minutes = 0;   //once 1 hour strikes, time starts over, maybe change this
-            }
         }
 
         this.draw_time("#595751");
@@ -710,12 +696,12 @@ class Project_Scene extends Scene_Component
     {
         var timeText = this.get_timeText();
         if(clear)
-            this.ctx_2d.clearRect(880,0,200,200);
+            this.textcanvas.clearRect(880,0,200,200);
 
-        this.ctx_2d.fillStyle = color;
-        this.ctx_2d.textAlign = "center";
-        this.ctx_2d.font = "18px PixelFont";
-        this.ctx_2d.fillText(timeText, 1000, 50);
+        this.textcanvas.fillStyle = color;
+        this.textcanvas.textAlign = "center";
+        this.textcanvas.font = "18px PixelFont";
+        this.textcanvas.fillText(timeText, 1000, 50);
     }
 
 
@@ -723,47 +709,47 @@ class Project_Scene extends Scene_Component
     {
         var text = "kills: " + this.shark_kills;
         if(clear)
-            this.ctx_2d.clearRect(0,0,200,200);
+            this.textcanvas.clearRect(0,0,200,200);
 
-        this.ctx_2d.fillStyle= color;
-        this.ctx_2d.font = "18px PixelFont";
-        this.ctx_2d.fillText(text, 100, 50);
+        this.textcanvas.fillStyle= color;
+        this.textcanvas.font = "18px PixelFont";
+        this.textcanvas.fillText(text, 100, 50);
 
     }
 
     draw_instructions(color)
     {
-      this.ctx_2d.fillStyle = color;
-      this.ctx_2d.font = "14px PixelFont";
-      this.ctx_2d.fillText("Help the Octopus survive!", 40, 520);
-      this.ctx_2d.fillText("Ink when in front", 40, 550);
-      this.ctx_2d.fillText("of the Sharks", 40, 580);
+      this.textcanvas.fillStyle = color;
+      this.textcanvas.font = "14px PixelFont";
+      this.textcanvas.fillText("Help the Octopus survive!", 40, 520);
+      this.textcanvas.fillText("Ink when in front", 40, 550);
+      this.textcanvas.fillText("of the Sharks", 40, 580);
       this.isDrawInstr = false;
     }
 
     draw_gameOver()
     {
 
-        this.ctx_2d.fillStyle = "rgba(0.5,0.5,0.5,0.2)";
-        this.ctx_2d.fillRect(0,0,1080,600);
-        this.ctx_2d.strokeRect(0,0,1080,600);
-        this.ctx_2d.fillStyle="#fff";
-        this.ctx_2d.font = "30px PixelFont";
-        this.ctx_2d.textAlign = "center";
+        this.textcanvas.fillStyle = "rgba(0.5,0.5,0.5,0.2)";
+        this.textcanvas.fillRect(0,0,1080,600);
+        this.textcanvas.strokeRect(0,0,1080,600);
+        this.textcanvas.fillStyle="#fff";
+        this.textcanvas.font = "30px PixelFont";
+        this.textcanvas.textAlign = "center";
         if(this.shark_kills < this.shark_t.length){
-          this.ctx_2d.fillText("GAME OVER", 540, 300);
+          this.textcanvas.fillText("GAME OVER", 540, 300);
         }
         else {
-            this.ctx_2d.fillText("YOU WIN!!", 540, 300);
+            this.textcanvas.fillText("YOU WIN!!", 540, 300);
         }
-        this.ctx_2d.font = "18px PixelFont";
-        this.ctx_2d.fillText("Refresh to restart", 540, 350);
-        this.ctx_2d.font = "14px PixelFont";
-        this.ctx_2d.fillText("time - " + this.get_timeText(), 540, 400);
-        this.ctx_2d.fillText("kills - " + this.shark_kills, 540, 420);
-        this.ctx_2d.fillText("number of inks - " + this.number_of_inks, 540, 440);
+        this.textcanvas.font = "18px PixelFont";
+        this.textcanvas.fillText("Refresh to restart", 540, 350);
+        this.textcanvas.font = "14px PixelFont";
+        this.textcanvas.fillText("time - " + this.get_timeText(), 540, 400);
+        this.textcanvas.fillText("kills - " + this.shark_kills, 540, 420);
+        this.textcanvas.fillText("number of inks - " + this.number_of_inks, 540, 440);
         let accuracy = this.number_of_inks == 0 ? "N/A" : parseInt(100*this.shark_kills/this.number_of_inks) + "%"
-                 this.ctx_2d.fillText("accuracy - " + accuracy, 540, 460);
+                 this.textcanvas.fillText("accuracy - " + accuracy, 540, 460);
         this.isGameOver = true;
     }
 
@@ -774,10 +760,10 @@ class Project_Scene extends Scene_Component
         for(var j = 0; j < this.columns; j++)
         {
 
-          let phase = i * (2*Math.PI / this.rows);
-          let phase2 = j * (2*Math.PI / this.columns);
+          let Hphase = i * (2*Math.PI / this.rows);
+          let Vphase = j * (2*Math.PI / this.columns);
           if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
-              this.flow_height[i][j] = this.flow_height[i][j] - 0.05*Math.sin(phase + phase2 + 4.5*this.time);
+              this.flow_height[i][j] = this.flow_height[i][j] - 0.05*Math.sin(Hphase + Vphase + 4.5*this.time);
         }
     }
 
@@ -895,213 +881,4 @@ class Project_Scene extends Scene_Component
       }//end of display
 
 
-  }
-
-
-
-
-
-
-
-window.Scene = window.classes.Scene
-class Scene
-{                           // **Scene** is the base class for any scene part or code snippet that you can add to a
-                            // canvas.  Make your own subclass(es) of this and override their methods "display()"
-                            // and "make_control_panel()" to make them draw to a canvas, or generate custom control
-                            // buttons and readouts, respectively.  Scenes exist in a hierarchy; their child Scenes
-                            // can either contribute more drawn shapes or provide some additional tool to the end
-                            // user via drawing additional control panel buttons or live text readouts.
-  constructor()
-    { this.children = [];
-                                                          // Set up how we'll handle key presses for the scene's control panel:
-      const callback_behavior = ( callback, event ) =>
-           { callback( event );
-             event.preventDefault();    // Fire the callback and cancel any default browser shortcut that is an exact match.
-             event.stopPropagation();   // Don't bubble the event to parent nodes; let child elements be targetted in isolation.
-           }
-      this.key_controls = new Keyboard_Manager( document, callback_behavior);
-    }
-  new_line( parent=this.control_panel )       // new_line():  Formats a scene's control panel with a new line break.
-    { parent.appendChild( document.createElement( "br" ) ) }
-  live_string( callback, parent=this.control_panel )
-    {                                             // live_string(): Create an element somewhere in the control panel that
-                                                  // does reporting of the scene's values in real time.  The event loop
-                                                  // will constantly update all HTML elements made this way.
-      parent.appendChild( Object.assign( document.createElement( "div"  ), { className:"live_string", onload: callback } ) );
-    }
-  key_triggered_button( description, shortcut_combination, callback, color = '#'+Math.random().toString(9).slice(-6),
-                        release_event, recipient = this, parent = this.control_panel )
-    {                                             // key_triggered_button():  Trigger any scene behavior by assigning
-                                                  // a key shortcut and a labelled HTML button to fire any callback
-                                                  // function/method of a Scene.  Optional release callback as well.
-      const button = parent.appendChild( document.createElement( "button" ) );
-      button.default_color = button.style.backgroundColor = color;
-      const  press = () => { Object.assign( button.style, { 'background-color' : 'red',
-                                                            'z-index': "1", 'transform': "scale(2)" } );
-                             callback.call( recipient );
-                           },
-           release = () => { Object.assign( button.style, { 'background-color' : button.default_color,
-                                                            'z-index': "0", 'transform': "scale(1)" } );
-                             if( !release_event ) return;
-                             release_event.call( recipient );
-                           };
-      const key_name = shortcut_combination.join( '+' ).split( " " ).join( "Space" );
-      button.textContent = "(" + key_name + ") " + description;
-      button.addEventListener( "mousedown" , press );
-      button.addEventListener( "mouseup",  release );
-      button.addEventListener( "touchstart", press, { passive: true } );
-      button.addEventListener( "touchend", release, { passive: true } );
-      if( !shortcut_combination ) return;
-      this.key_controls.add( shortcut_combination, press, release );
-    }
-                                                // To use class Scene, override at least one of the below functions,
-                                                // which will be automatically called by other classes:
-  display( context, program_state )
-    {}                            // display(): Called by Webgl_Manager for drawing.
-  make_control_panel()
-    {}                            // make_control_panel(): Called by Controls_Widget for generating interactive UI.
-  show_explanation( document_section )
-    {}                            // show_explanation(): Called by Text_Widget for generating documentation.
-}
-
-
-
-class Shape_From_File extends Shape
-{                                   // **Shape_From_File** is a versatile standalone Shape that imports
-                                    // all its arrays' data from an .obj 3D model file.
-  constructor( filename )
-    { super( "position", "normal", "texture_coord" );
-                                    // Begin downloading the mesh. Once that completes, return
-                                    // control to our parse_into_mesh function.
-      this.load_file( filename );
-    }
-  load_file( filename )
-      {                             // Request the external file and wait for it to load.
-                                    // Failure mode:  Loads an empty shape.
-        return fetch( filename )
-          .then( response =>
-            { if ( response.ok )  return Promise.resolve( response.text() )
-              else                return Promise.reject ( response.status )
-            })
-          .then( obj_file_contents => this.parse_into_mesh( obj_file_contents ) )
-          .catch( error => { this.copy_onto_graphics_card( this.gl ); } )
-      }
-  parse_into_mesh( data )
-    {                           // Adapted from the "webgl-obj-loader.js" library found online:
-      var verts = [], vertNormals = [], textures = [], unpacked = {};
-
-      unpacked.verts = [];        unpacked.norms = [];    unpacked.textures = [];
-      unpacked.hashindices = {};  unpacked.indices = [];  unpacked.index = 0;
-
-      var lines = data.split('\n');
-
-      var VERTEX_RE = /^v\s/;    var NORMAL_RE = /^vn\s/;    var TEXTURE_RE = /^vt\s/;
-      var FACE_RE = /^f\s/;      var WHITESPACE_RE = /\s+/;
-
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].trim();
-        var elements = line.split(WHITESPACE_RE);
-        elements.shift();
-
-        if      (VERTEX_RE.test(line))   verts.push.apply(verts, elements);
-        else if (NORMAL_RE.test(line))   vertNormals.push.apply(vertNormals, elements);
-        else if (TEXTURE_RE.test(line))  textures.push.apply(textures, elements);
-        else if (FACE_RE.test(line)) {
-          var quad = false;
-          for (var j = 0, eleLen = elements.length; j < eleLen; j++)
-          {
-              if(j === 3 && !quad) {  j = 2;  quad = true;  }
-              if(elements[j] in unpacked.hashindices)
-                  unpacked.indices.push(unpacked.hashindices[elements[j]]);
-              else
-              {
-                  var vertex = elements[ j ].split( '/' );
-
-                  unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 0]);
-                  unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 1]);
-                  unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 2]);
-
-                  if (textures.length)
-                    {   unpacked.textures.push(+textures[( (vertex[1] - 1)||vertex[0]) * 2 + 0]);
-                        unpacked.textures.push(+textures[( (vertex[1] - 1)||vertex[0]) * 2 + 1]);  }
-
-                  unpacked.norms.push(+vertNormals[( (vertex[2] - 1)||vertex[0]) * 3 + 0]);
-                  unpacked.norms.push(+vertNormals[( (vertex[2] - 1)||vertex[0]) * 3 + 1]);
-                  unpacked.norms.push(+vertNormals[( (vertex[2] - 1)||vertex[0]) * 3 + 2]);
-
-                  unpacked.hashindices[elements[j]] = unpacked.index;
-                  unpacked.indices.push(unpacked.index);
-                  unpacked.index += 1;
-              }
-              if(j === 3 && quad)   unpacked.indices.push( unpacked.hashindices[elements[0]]);
-          }
-        }
-      }
-      {
-      const { verts, norms, textures } = unpacked;
-        for( var j = 0; j < verts.length/3; j++ )
-        {
-          this.arrays.position     .push( vec3( verts[ 3*j ], verts[ 3*j + 1 ], verts[ 3*j + 2 ] ) );
-          this.arrays.normal       .push( vec3( norms[ 3*j ], norms[ 3*j + 1 ], norms[ 3*j + 2 ] ) );
-          this.arrays.texture_coord.push( vec( textures[ 2*j ], textures[ 2*j + 1 ] ) );
-        }
-        this.indices = unpacked.indices;
-      }
-      this.normalize_positions( false );
-      this.ready = true;
-    }
-  draw( context, program_state, model_transform, material )
-    {               // draw(): Same as always for shapes, but cancel all
-                    // attempts to draw the shape before it loads:
-      if( this.ready )
-        super.draw( context, program_state, model_transform, material );
-    }
-}
-
-class Obj_File_Demo extends Scene
-  {                           // **Obj_File_Demo** show how to load a single 3D model from an OBJ file.
-                              // Detailed model files can be used in place of simpler primitive-based
-                              // shapes to add complexity to a scene.  Simpler primitives in your scene
-                              // can just be thought of as placeholders until you find a model file
-                              // that fits well.  This demo shows the teapot model twice, with one
-                              // teapot showing off the Fake_Bump_Map effect while the other has a
-                              // regular texture and Phong lighting.
-    constructor()
-      { super();
-                                      // Load the model file:
-        this.shapes = { "octo": new Shape_From_File( "assets/Octopus.obj" ) };
-
-                                      // Don't create any DOM elements to control this scene:
-        this.widget_options = { make_controls: false };
-                                                          // Non bump mapped:
-        this.stars = new Material( new defs.Textured_Phong( 1 ),  { color: color( .5,.5,.5,1 ),
-          ambient: .3, diffusivity: .5, specularity: .5, texture: new Texture( "assets/stars.png" ) });
-                                                           // Bump mapped:
-        this.bumps = new Material( new defs.Fake_Bump_Map( 1 ), { color: color( .5,.5,.5,1 ),
-          ambient: .3, diffusivity: .5, specularity: .5, texture: new Texture( "assets/stars.png" ) });
-      }
-    display( context, program_state )
-      { const t = program_state.animation_time;
-
-        program_state.set_camera( Mat4.translation( 0,0,-5 ) );    // Locate the camera here (inverted matrix).
-        program_state.projection_transform = Mat4.perspective( Math.PI/4, context.width/context.height, 1, 500 );
-                                                // A spinning light to show off the bump map:
-        program_state.lights = [ new Light(
-                                 Mat4.rotation( t/300,   1,0,0 ).times( vec4( 3,2,10,1 ) ),
-                                             color( 1,.7,.7,1 ), 100000 ) ];
-
-        for( let i of [ -1, 1 ] )
-        {                                       // Spin the 3D model shapes as well.
-          const model_transform = Mat4.rotation( t/2000,   0,2,1 )
-                          .times( Mat4.translation( 2*i, 0, 0 ) )
-                          .times( Mat4.rotation( t/1500,   -1,2,0 ) )
-                          .times( Mat4.rotation( -Math.PI/2,   1,0,0 ) );
-          this.shapes.octo.draw( context, program_state, model_transform, i == 1 ? this.stars : this.bumps );
-        }
-      }
-  show_explanation( document_element )
-    { document_element.innerHTML += "<p>This demo loads an external 3D model file of a teapot.  It uses a condensed version of the \"webgl-obj-loader.js\" "
-                                 +  "open source library, though this version is not guaranteed to be complete and may not handle some .OBJ files.  It is contained in the class \"Shape_From_File\". "
-                                 +  "</p><p>One of these teapots is lit with bump mapping.  Can you tell which one?</p>";
-    }
   }
