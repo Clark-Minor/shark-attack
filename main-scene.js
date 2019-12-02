@@ -229,8 +229,8 @@ window.Project_Scene = window.classes.Project_Scene =
 class Project_Scene extends Scene_Component
   { constructor( context, control_box, gl, text_canvas )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
-        if( !context.globals.has_controls   )
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );
+        /*if( !context.globals.has_controls   )
+          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );*/
 
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
