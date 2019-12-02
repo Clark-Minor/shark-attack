@@ -1,16 +1,16 @@
-// window.Cube = window.classes.Cube =
-// class Cube extends Shape    // A cube inserts six square strips into its arrays.
-// { constructor()
-//     { super( "positions", "normals", "texture_coords" );
-//       for( var i = 0; i < 3; i++ )
-//         for( var j = 0; j < 2; j++ )
-//         { var square_transform = Mat4.rotation( i == 0 ? Math.PI/2 : 0, Vec.of(1, 0, 0) )
-//                          .times( Mat4.rotation( Math.PI * j - ( i == 1 ? Math.PI/2 : 0 ), Vec.of( 0, 1, 0 ) ) )
-//                          .times( Mat4.translation([ 0, 0, 1 ]) );
-//           Square.insert_transformed_copy_into( this, [], square_transform );
-//         }
-//     }
-// }
+window.Cube = window.classes.Cube =
+class Cube extends Shape    // A cube inserts six square strips into its arrays.
+{ constructor()
+    { super( "positions", "normals", "texture_coords" );
+      for( var i = 0; i < 3; i++ )
+        for( var j = 0; j < 2; j++ )
+        { var square_transform = Mat4.rotation( i == 0 ? Math.PI/2 : 0, Vec.of(1, 0, 0) )
+                         .times( Mat4.rotation( Math.PI * j - ( i == 1 ? Math.PI/2 : 0 ), Vec.of( 0, 1, 0 ) ) )
+                         .times( Mat4.translation([ 0, 0, 1 ]) );
+          Square.insert_transformed_copy_into( this, [], square_transform );
+        }
+    }
+}
 
 
 //SURFACE OF WATER//
@@ -103,30 +103,6 @@ class Body_Of_Water extends Shape
       }
 }
 
-window.Edge_Of_Tank = window.classes.Edge_Of_Tank =
-class Edge_Of_Tank extends Shape                 // Here's a complete, working example of a Shape subclass.  It is a blueprint for a cube.
-  { constructor()
-      { super( "positions", "normals" ); // Name the values we'll define per each vertex.  They'll have positions and normals.
-
-        // First, specify the vertex positions -- just a bunch of points that exist at the corners of an imaginary cube.
-        this.positions.push( ...Vec.cast( [-1,-1,-1], [1,-1,-1], [-1,-1,1], [1,-1,1], [1,1,-1],  [-1,1,-1],  [1,1,1],  [-1,1,1],
-                                          [-1,-1,-1], [-1,-1,1], [-1,1,-1], [-1,1,1], [1,-1,1],  [1,-1,-1],  [1,1,1],  [1,1,-1],
-                                          [-1,-1,1],  [1,-1,1],  [-1,1,1],  [1,1,1], [1,-1,-1], [-1,-1,-1], [1,1,-1], [-1,1,-1] ) );
-        // Supply vectors that point away from eace face of the cube.  They should match up with the points in the above list
-        // Normal vectors are needed so the graphics engine can know if the shape is pointed at light or not, and color it accordingly.
-        this.normals.push(   ...Vec.cast( [0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [-1,0,0], [-1,0,0],
-                                          [-1,0,0], [-1,0,0], [1,0,0],  [1,0,0],  [1,0,0], [1,0,0], [0,0,1], [0,0,1], [0,0,1],   [0,0,1],
-                                          [0,0,-1], [0,0,-1], [0,0,-1], [0,0,-1] ) );
-
-                 // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
-                 // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
-                 // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
-        this.indices.push( 8, 9, 10, 9, 11, 10, 12, 13,
-                          14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22 );
-        // It stinks to manage arrays this big.  Later we'll show code that generates these same cube vertices more automatically.
-      }
-  }
-
 window.Octopus = window.classes.Octopus =
 class Octopus extends Shape
 { constructor()
@@ -182,21 +158,6 @@ class Octopus_Eyes extends Shape
    }
 }
 
-window.Octopus_Pupil = window.classes.Octopus_Pupil =
-class Octopus_Pupil extends Shape
-{
-  constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
-   { super( "positions", "normals", "texture_coords" );
-     var eye_1_t = Mat4.identity().times(Mat4.translation(Vec.of(3.5,.1,1))).times(Mat4.scale([2,1.7,3]));
-     var eye_2_t = eye_1_t.times(Mat4.translation(Vec.of(0,.8,0)));
-
-     Cube.insert_transformed_copy_into(this, [], eye_1_t);
-     Cube.insert_transformed_copy_into(this, [], eye_2_t);
-
-
-   }
-}
-
 window.Shark = window.classes.Shark =
 class Shark extends Shape
 {
@@ -206,7 +167,7 @@ class Shark extends Shape
             var head_t = Mat4.identity().times(Mat4.translation([3.2,0,0])).times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0))).times(Mat4.scale([1,1.1,1]))
             var bottom_t = Mat4.identity().times(Mat4.translation([-3,0,0])).times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0))).times(Mat4.scale([1,1.1,1]))
             var tail_t = Mat4.identity().times(Mat4.translation([-3,0,0])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([1.5,1.5,1.5]))
-            var fin_t = Mat4.identity().times(Mat4.translation([0,0,0.3])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([2.2,2.2,2.2]))
+            var fin_t = Mat4.identity().times(Mat4.translation([0,0,0.3])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([2,2,2]))
             Rounded_Capped_Cylinder.insert_transformed_copy_into(this, [15,15], body_t);
             Rounded_Closed_Cone.insert_transformed_copy_into(this, [15,15], head_t);
             Rounded_Closed_Cone.insert_transformed_copy_into(this, [15,15], bottom_t);
@@ -229,7 +190,6 @@ class Texture_Caustic extends Phong_Shader
 
           vec4 tex_color = texture2D( texture, f_tex_coord);                         // Sample the texture image in the correct place.
           vec3 bumped_N = normalize( N + tex_color.rgb - 0.5 * vec3(1,1,1) );
-
                                                                                      // Compute an initial (ambient) color:
           if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
           else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
@@ -238,6 +198,62 @@ class Texture_Caustic extends Phong_Shader
     }
 }
 
+
+
+
+// Extra credit begins here (See TODO comments below):
+
+window.Ring_Shader = window.classes.Ring_Shader =
+class Ring_Shader extends Shader              // Subclasses of Shader each store and manage a complete GPU program.
+{ material() { return { shader: this } }      // Materials here are minimal, without any settings.
+  map_attribute_name_to_buffer_name( name )       // The shader will pull single entries out of the vertex arrays, by their data fields'
+    {                                             // names.  Map those names onto the arrays we'll pull them from.  This determines
+                                                  // which kinds of Shapes this Shader is compatible with.  Thanks to this function,
+                                                  // Vertex buffers in the GPU can get their pointers matched up with pointers to
+                                                  // attribute names in the GPU.  Shapes and Shaders can still be compatible even
+                                                  // if some vertex data feilds are unused.
+      return { object_space_pos: "positions" }[ name ];      // Use a simple lookup table.
+    }
+    // Define how to synchronize our JavaScript's variables to the GPU's:
+  update_GPU( g_state, model_transform, material, gpu = this.g_addrs, gl = this.gl )
+      { const proj_camera = g_state.projection_transform.times( g_state.camera_transform );
+                                                                                        // Send our matrices to the shader programs:
+        gl.uniformMatrix4fv( gpu.model_transform_loc,             false, Mat.flatten_2D_to_1D( model_transform.transposed() ) );
+        gl.uniformMatrix4fv( gpu.projection_camera_transform_loc, false, Mat.flatten_2D_to_1D(     proj_camera.transposed() ) );
+      }
+  shared_glsl_code()            // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
+    { return `precision mediump float;
+              varying vec4 position;
+              varying vec4 center;
+      `;
+    }
+  vertex_glsl_code()           // ********* VERTEX SHADER *********
+    { return `
+        attribute vec3 object_space_pos;
+        uniform mat4 model_transform;
+        uniform mat4 projection_camera_transform;
+
+        void main()
+        {
+        }`;           // TODO:  Complete the main function of the vertex shader (Extra Credit Part II).
+    }
+  fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    { return `
+        void main()
+        {
+        }`;           // TODO:  Complete the main function of the fragment shader (Extra Credit Part II).
+    }
+}
+
+window.Grid_Sphere = window.classes.Grid_Sphere =
+class Grid_Sphere extends Shape           // With lattitude / longitude divisions; this means singularities are at
+  { constructor( rows, columns, texture_range )             // the mesh's top and bottom.  Subdivision_Sphere is a better alternative.
+      { super( "positions", "normals", "texture_coords" );
+
+
+                      // TODO:  Complete the specification of a sphere with lattitude and longitude lines
+                      //        (Extra Credit Part III)
+      } }
 
 
 
@@ -256,12 +272,7 @@ class Project_Scene extends Scene_Component
 
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
-        context.globals.graphics_state.camera_transform = Mat4.translation([ 0,0,-50 ])
-                                                    .times(Mat4.translation([ 0,-25,0 ]))
-                                                    .times(Mat4.translation([ -20,0,0 ]))
-                                                    .times(Mat4.rotation(-1.2, Vec.of(1,0,0)))
-                                                    .times(Mat4.rotation(Math.PI/5, Vec.of(0,0,1)))
-                                                    //.times(Mat4.rotation(Math.PI/4, Vec.of(0,1,0)));
+        context.globals.graphics_state.camera_transform = Mat4.translation([ -5,-5,-70 ]);
 
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
@@ -278,12 +289,12 @@ class Project_Scene extends Scene_Component
 
         //for text on display
         this.ctx_2d = text_canvas.getContext("2d");
-        //this.isGameOver = false;
+        this.ctx_drawn = false;
         this.minutes = 0;
         this.seconds = 0;
         this.timer = setTimeout( () => {this.addTime();}, 1000 );  //adds time after 1s
-        setTimeout( () => {	this.draw_time("#595751");
-					        this.draw_kills("#595751"); }, 900 );
+        setTimeout( () => {	this.draw_time("#000");
+					        this.draw_kills("#000"); }, 900 );
 
 	    this.shark_kills = 0;
         this.number_of_inks = 0;
@@ -297,16 +308,11 @@ class Project_Scene extends Scene_Component
         this.go_right = false;
         this.octo_velocity = Vec.of(0,0,0);
 
-        //INK location
-        this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5]));
-
         //SHARKs location
         this.shark_t = [Mat4.identity().times(Mat4.translation([5,5,1.25])),
         Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25]))
         ];
-        this.shark_bounce = [0,0]
-        this.shark_velocity = [Vec.of(.25, 0, 0),Vec.of(.25, 0, 0)]
-        this.is_sunk = [false,false]
+        this.shark_velocity = Vec.of(.25, 0, 0)
 
         //random z for water (peaks and troughs)
         for(var i=0; i< this.rows; i++)
@@ -326,37 +332,29 @@ class Project_Scene extends Scene_Component
         this.caustic_counter = 0;
         this.caustic_update = true;
         this.gif_ready = false;
-        setTimeout( () => { this.gif_ready = true; }, 5000 );
+        setTimeout( () => { this.gif_ready = true; }, 20000 );
         for(var i = 0; i < 100; i++)
         {
             var img = new Image();
             img.src = "assets/Caustic/target-" + i + ".png";
         }
 
-        //for smoke//
-        this.smoke_counter = 0;
-        this.smoke_update = true;
-        this.gif_ready_smoke = false;
-        setTimeout( () => { this.gif_ready_smoke = true; }, 200000 );
-        for(var i = 0; i < 14; i++)
-        {
-            var img = new Image();
-            img.src = "assets/Smoke/" + i + ".png";
-        }
 
 
+        this.shapes = {  torus:  new Torus( 15, 15 ),
+                         torus2: new ( Torus.prototype.make_flat_shaded_version() )( 15, 15 ),
 
-        this.shapes = {  axis: new Axis_Arrows(),
+                         // TODO:  Fill in as many additional shape instances as needed in this key/value table.
+                         //        (Requirement 1)
+                         axis: new Axis_Arrows(),
 
-                         water: new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.Height_Map),
+                         water: new Water(this.rows, this.columns, this.width, this.length, this.Height_Map),
                          caustic: new Square(),
                          tank: new Body_Of_Water(),
-                         tankedge: new Edge_Of_Tank(),
+                         skybox: new Cube(),
 
                          octopus: new Octopus(),
                          eyes: new Octopus_Eyes(),
-                         pupil: new Octopus_Pupil(),
-                         smoke: new Square(),
 
                          shark: new Shark(),
 
@@ -373,15 +371,13 @@ class Project_Scene extends Scene_Component
         this.materials =
           { axis_material:     context.get_instance( Phong_Shader ).material(Color.of(1,1,1,1)),
 
-            water_material:     context.get_instance( Phong_Shader ).material(Color.of( /*36/255, 171/255, 255/255,*/ /*56/255, 213/255, 252/255,*/0,149/255,255/255, 0.6 ),
+            water_material:     context.get_instance( Phong_Shader ).material(Color.of( /*36/255, 171/255, 255/255,*/56/255, 213/255, 252/255, 0.6 ),
             {
-              ambient: 1,  //0.6
-              diffusivity: 0.5,  //0.1
-              specular: 0,  //0.5
+              ambient: 0.6,
+              diffusivity: 0.1,
+              specular: 0.5,
               smoothness: 80   //fuck is the difference???
             }),
-
-            edge_material: context.get_instance(Phong_Shader).material(Color.of(158/255,215/255,1,1), {ambient: 1}),
 
             wall_texture: context.get_instance( Phong_Shader ).material(Color.of(0, 0, 0, 1), //opaque black
             {
@@ -395,16 +391,14 @@ class Project_Scene extends Scene_Component
                 texture: context.get_instance("assets/sand.png", true) //true = trilinear filtering
             }),
 
-            octopus_skin: context.get_instance( Phong_Shader ).material(Color.of(/*204/255,0,170/255*/ 235/255,84/255,150/255,1),
+            octopus_skin: context.get_instance( Phong_Shader ).material(Color.of(204/255,0,170/255,1),
             {
-                ambient: 0.8,
-                //diffusivity: 0.5,
-                //specular: 0.5,
+                ambient: 1,
+                //diffusivity: 1,
+                specular: 0.5,
             }),
 
             eye_material: context.get_instance( Phong_Shader ).material(Color.of(1,1,1,1), {ambient: 0.8}),
-
-            pupil_material: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 0.8}),
 
             caustic_material: context.get_instance( Texture_Caustic ).material(Color.of( 0,0,0,1 ),
             {
@@ -417,19 +411,10 @@ class Project_Scene extends Scene_Component
                   ambient: 0.5,
             }),
 
-            smoke_material: context.get_instance(Phong_Shader).material(Color.of(1,1,1,1),
-            {
-                  ambient: 1,
-                  texture: context.get_instance("assets/Smoke/0.png",true)
-            }),
-
           }
 
         //(position, color, size)
-        this.lights = [ //new Light( Vec.of( this.width/2,this.length/2,0,1 ), Color.of( 1, 0.4, 1, 1 ), 100000 ),
-                        //new Light( Vec.of( this.width/2,this.length/2,0,-1 ), Color.of( 1, 0.4, 1, 1 ), 1000 ),
-                        new Light( Vec.of( 70,95,10,1 ), Color.of( 0, 1, 1, 1 ), 100000 )
-                        ];
+        this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
         //this.lights = [ new Light( Vec.of( 0,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
         //                new Light( Vec.of( this.width/2,0,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ),
         //                new Light( Vec.of( 0,this.length/2,this.height,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
@@ -444,12 +429,11 @@ class Project_Scene extends Scene_Component
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
       { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
         this.new_line();
-        this.key_triggered_button( "Go Forward", [ "s" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
-        this.key_triggered_button( "Go Backward", [ "w" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
-        this.key_triggered_button( "Go Left", [ "a" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
-        this.key_triggered_button( "Go Right", [ "d" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false);
+        this.key_triggered_button( "Go Forward", [ "k" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
+        this.key_triggered_button( "Go Backward", [ "i" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
+        this.key_triggered_button( "Go Left", [ "j" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
+        this.key_triggered_button( "Go Right", [ "l" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false);
         this.new_line();
-        this.key_triggered_button("Ink", [" "], () => this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5])), () => this.smoke_update = true, () => this.number_of_inks ++);
       }
 
     update_scene(graphics_state, dt)
@@ -519,33 +503,28 @@ class Project_Scene extends Scene_Component
           //break;
         //console.log(shark);
         this.shark_t[i] =
-        this.shark_t[i].times(Mat4.translation(this.shark_velocity[i]));
+        this.shark_t[i].times(Mat4.translation(this.shark_velocity));
 
         var bounce_angle = Math.random() * 1.5 - .75;
-        console.log(bounce_angle + Math.PI);
         if(this.shark_t[i][0][3] > this.width - 5)
         {
           this.shark_t[i][0][3] = this.width - 5;
           this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
-          this.shark_bounce[i] = bounce_angle + Math.PI;
         }
         if(this.shark_t[i][0][3] < 5)
         {
           this.shark_t[i][0][3] = 5;
           this.shark_t[i]= this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
-          this.shark_bounce[i] = bounce_angle + Math.PI;
         }
         if(this.shark_t[i][1][3] > this.length - 5)
         {
           this.shark_t[i][1][3] = this.length - 5;
           this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
-          this.shark_bounce[i] = bounce_angle + Math.PI;
         }
         if(this.shark_t[i][1][3] < 5)
         {
           this.shark_t[i][1][3] = 5;
           this.shark_t[i] = this.shark_t[i].times(Mat4.rotation(Math.PI + bounce_angle,Vec.of(0,0,1)))
-          this.shark_bounce[i] = bounce_angle + Math.PI;
         }
         this.draw_shark(graphics_state, this.shark_t[i]);
         //console.log(this.octopus_t)
@@ -555,55 +534,25 @@ class Project_Scene extends Scene_Component
 
     collision_detection(graphics_state, shark)
     {
-        var octo_circ = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], radius: 4}
-        var shark_circ = {x:shark[0], y:shark[1], radius: 4}
+        var octo_rect = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], width:4, height:4}
+        var shark_rect = {x:shark[0], y:shark[1], width:4, height:4}
 
         //console.log(shark)
-        //this.shapes.hitbox.draw(graphics_state, this.octopus_t.times(Mat4.scale(Vec.of(10,10,0))),
-         //this.materials.shark_material);
-        // this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(Mat4.translation(Vec.of(95,0,0))).times(Mat4.scale(Vec.of(10,10,0))),this.materials.shark_material);
+        this.shapes.hitbox.draw(graphics_state, this.octopus_t.times(Mat4.scale(Vec.of(4,4,20))),
+         this.materials.shark_material);
+        this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(this.shark_t[0]).times(Mat4.scale(Vec.of(4,2,0))), this.materials.octopus_skin)
+        this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(Mat4.translation(Vec.of(this.shark_t[1][0][3],this.shark_t[1][1][3],0))).times(Mat4.scale(Vec.of(4,2,0))), this.materials.octopus_skin)
 
-        // this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(this.shark_t[0]).times(Mat4.scale(Vec.of(2,2,0))), this.materials.octopus_skin)
-        console.log(this.shark_bounce[1])
-        //console.log(this.shark)
-        var rotate_head = Mat4.rotation(this.shark_bounce[1],Vec.of(0,0,1))
-        var translate_head = Mat4.translation(Vec.of(this.shark_t[1][0][0]*4,this.shark_t[1][0][1]*4,0))
-        var shark_mat = Mat4.translation(Vec.of(this.shark_t[1][0][3],this.shark_t[1][1][3],0));
-      //  this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(this.shark_t[1]).times(Mat4.scale(Vec.of(2,2,0))), this.materials.octopus_skin)
+        if(octo_rect.x < shark_rect.x + shark_rect.width &&
+            octo_rect.x + octo_rect.width > shark_rect.x &&
+            octo_rect.y < shark_rect.y + shark_rect.height &&
+            octo_rect.y + octo_rect.height > shark_rect.y
+          && this.octopus_t[2][3] - shark[2] == 3.75){
 
-        var dx = octo_circ.x - shark_circ.x;
-        var dy = octo_circ.y - shark_circ.y;
-        var distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < octo_circ.radius + shark_circ.radius){
-
-                //this.graphics_state.animate = 0
-                //this.isGameOver = !this.isGameOver;
-                this.draw_gameOver();
-                clearTimeout(this.timer);
+                //this.ctx_drawn = !this.ctx_drawn;
+                this.graphics_state.animate = 0
+                //this.draw_gameOver();
             }
-    }
-
-    collision_detection_ink(graphics_state, shark, shark_num){
-      var shark_circ = {x:shark[0], y:shark[1], radius: 4}
-      var ink_circ = {x:this.ink_t[0][3], y:this.ink_t[1][3], radius: 4}
-
-      var dx = ink_circ.x - shark_circ.x;
-      var dy = ink_circ.y - shark_circ.y;
-      var distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance < ink_circ.radius + shark_circ.radius){
-
-              //this.graphics_state.animate = 0
-              //this.isGameOver = !this.isGameOver;
-              this.is_sunk[shark_num] = true;
-              this.shark_velocity[shark_num] = Vec.of(0,0,-0.25);
-              this.shark_kills ++;
-              if(this.shark_kills >= this.shark_t.length)
-              {
-                this.draw_gameOver();
-              }
-          }
     }
 
     draw_octopus(graphics_state, transform)
@@ -611,45 +560,7 @@ class Project_Scene extends Scene_Component
 
         this.shapes.octopus.draw(graphics_state, transform, this.materials.octopus_skin);
         this.shapes.eyes.draw(graphics_state, transform, this.materials.eye_material);
-        this.shapes.pupil.draw(graphics_state, transform, this.materials.pupil_material);
 
-    }
-
-    draw_ink(graphics_state, transform)
-    {
-        /*if (this.smoke_counter >= 13)
-            this.smoke_counter = 0;
-    */
-        if(this.smoke_update)
-        {
-            //console.log("a")
-            this.smoke_counter += 1;
-            this.smoke_counter = this.smoke_counter%13;
-            this.smoke_update = false;
-        }
-        else
-            //console.log("b")
-            this.smoke_update = true;
-
-
-
-         var smoke_str = "assets/Smoke/" + this.smoke_counter.toString() +  ".png";
-
-         var smoke_transform = transform
-         //Mat4.identity().times(Mat4.translation([0,0,10])).times(Mat4.scale([3,3,0]))
-         if(!this.gif_ready_smoke)
-         {
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}) );
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
-         }
-         else
-         {
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}));
-         }
     }
 
     draw_shark(graphics_state, transform)
@@ -659,27 +570,25 @@ class Project_Scene extends Scene_Component
 
     draw_skybox(graphics_state)
     {
-        var wall_transform = Mat4.identity().times(Mat4.translation([10, 700, 75])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width,this.width,0]))
+        var wall_transform = Mat4.identity().times(Mat4.translation([0, 700, 75])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width*3,this.width*3,0]))
         for(var i = 0; i < 9; i++)
         {
             if(i%2==0)
-
-            this.shapes.wall.draw(graphics_state, wall_transform.times(Mat4.translation([i-2,0,0])), this.materials.wall_texture);
-
+            this.shapes.wall.draw(graphics_state, wall_transform.times(Mat4.translation([i,0,0])), this.materials.wall_texture);
         }
 
-        var wall2_transform = Mat4.identity().times(Mat4.translation([670, 415, 75])).times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1))).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width,this.width,0]))
+        var wall2_transform = Mat4.identity().times(Mat4.translation([700, 400, 75])).times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1))).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width*3,this.width*3,0]))
         for(var i = 0; i < 9; i++)
         {
             if(i%2==0)
-            this.shapes.wall.draw(graphics_state, wall2_transform.times(Mat4.translation([i-2,0,0])), this.materials.wall_texture);
+            this.shapes.wall.draw(graphics_state, wall2_transform.times(Mat4.translation([i,0,0])), this.materials.wall_texture);
         }
 
         var floor_transform = Mat4.identity().times(Mat4.translation([0,0,-this.height - 0.1])).times(Mat4.scale([15,15,0]))
         for(var i = -2; i < 50; i++) //x axis
         {
             if(i%2==0)
-                  for(var j = -2; j < 51; j++) //y axis
+                  for(var j = -2; j < 50; j++) //y axis
                   {
                         if(j%2==0)
                         this.shapes.floor.draw(graphics_state, floor_transform.times(Mat4.translation([i,j,0])), this.materials.floor_texture);
@@ -701,7 +610,7 @@ class Project_Scene extends Scene_Component
             }
         }
 
-        this.draw_time("#595751");
+        this.draw_time("#000");
         this.timer = setTimeout( () => {this.addTime();}, 1000 );
     }
 
@@ -740,21 +649,16 @@ class Project_Scene extends Scene_Component
 
     draw_gameOver()
     {
-        //this.isGameOver = true;
-        this.ctx_2d.fillStyle = "rgba(0.5,0.5,0.5,0.2)";
+        this.ctx_drawn = true;
+        this.ctx_2d.fillStyle = "rgba(0.5,0.5,0.5,0.5)";
         this.ctx_2d.fillRect(0,0,1080,600);
         this.ctx_2d.strokeRect(0,0,1080,600);
         this.ctx_2d.fillStyle="#fff";
         this.ctx_2d.font = "30px PixelFont";
         this.ctx_2d.textAlign = "center";
-        if(this.shark_kills < this.shark_t.length){
-          this.ctx_2d.fillText("GAME OVER", 540, 300);
-        }
-        else {
-            this.ctx_2d.fillText("YOU WIN!!", 540, 300);
-        }
+        this.ctx_2d.fillText("GAME OVER", 540, 300);
         this.ctx_2d.font = "18px PixelFont";
-        this.ctx_2d.fillText("Refresh to restart", 540, 350);
+        this.ctx_2d.fillText("Press x to restart", 540, 350);
         this.ctx_2d.font = "14px PixelFont";
         this.ctx_2d.fillText("time - " + this.get_timeText(), 540, 400);
         this.ctx_2d.fillText("kills - " + this.shark_kills, 540, 420);
@@ -784,7 +688,7 @@ class Project_Scene extends Scene_Component
         this.time = t;
 
         //just to orient ourselves, by origin
-        //this.shapes.axis.draw(graphics_state, Mat4.identity(), this.materials.axis_material);
+        this.shapes.axis.draw(graphics_state, Mat4.identity(), this.materials.axis_material);
 
         this.flow_of_water();
 
@@ -798,32 +702,27 @@ class Project_Scene extends Scene_Component
 
 
         //CREATE NEW WATER SHAPE
-        this.shapes.water = new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.Height_Map);
+        this.shapes.water = new Water(this.rows, this.columns, this.width, this.length, this.Height_Map);
         this.shapes.water.send_water(this.gl);
-        this.shapes.tankedge.draw(graphics_state, Mat4.identity().times(Mat4.translation([this.width/2,this.length/2,1.6])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width/2, 1.5, this.length/2])), this.materials.edge_material);
 
 
+
+        //this.shapes.skybox.draw(graphics_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([500,500,500])), this.materials.box_texture);
 
         //this already draws octopus and sharks
         this.update_scene(graphics_state, this.time);
 
-        for(var i = 0; i < this.shark_t.length; i++)
+        for(var shark of this.shark_t)
         {
-            var shark_pos = Vec.of(this.shark_t[i][0][3],this.shark_t[i][1][3],this.shark_t[i][2][3]);
-            if(this.is_sunk[i] == false){
-            this.collision_detection_ink(graphics_state, shark_pos, i);
+            var shark_pos = Vec.of(shark[0][3],shark[1][3],shark[2][3]);
             this.collision_detection(graphics_state, shark_pos);
-            }
-
             //console.log(shark_pos)
         }
-        if(this.shark_kills)
-          this.draw_kills("#595751");
 
 
 
         //DRAW CAUSTICS//
-        if (this.caustic_counter >= 99)
+        if (this.caustic_counter == 99)
             this.caustic_counter = 0;
 
         if(this.caustic_update)
@@ -836,40 +735,30 @@ class Project_Scene extends Scene_Component
 
          var caustic_str = "assets/Caustic/target-" + this.caustic_counter.toString() +  ".png";
 
-         var caustic_transform = Mat4.identity().times(Mat4.translation([ this.width/8, this.length/8, -this.height ]))
-                                                .times(Mat4.scale([ this.width/8, this.length/8, 1 ]));
          if(!this.gif_ready)
          {
-            for(var i = 0; i < 7; i++)
-            {
-                for(var j = 0; j < 7; j++)
-                {
-                    if(i%2==0 && j%2==0)
-                    {
-                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );
-                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material);
-                    }
-                }
-            }
+
+            this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
+                                                                     .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
+                                                      ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}) );
+            this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
+                                                                     .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
+                                                      ,this.materials.caustic_material);
          }
          else
          {
-             for(var i = 0; i < 7; i++)
-            {
-                for(var j = 0; j < 7; j++)
-                {
-                    if(i%2==0 && j%2==0)
-                    {
-                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material);
-                        this.shapes.caustic.draw( graphics_state, caustic_transform.times(Mat4.translation([ i,j,0 ])), this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));
-                    }
-                }
-            }
+             this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
+                                                                      .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
+                                                       ,this.materials.caustic_material);
+
+             this.shapes.caustic.draw( graphics_state, Mat4.identity().times(Mat4.translation([ this.width/2, this.length/2, -this.height ]))
+                                                                      .times(Mat4.scale([ this.width/2, this.length/2, 1 ]))
+                                                       ,this.materials.caustic_material.override({texture: this.context.get_instance(caustic_str,true)}));
          }
 
         //ours
         let water_transform = Mat4.identity().times( Mat4.translation([0, 0, 0]) ); //make whole surface go up and down
-        this.shapes.water.draw(graphics_state, water_transform, this.materials.water_material, "TRIANGLE_STRIP");
+        this.shapes.water.draw(graphics_state, water_transform, this.materials.water_material);
         //console.log(this.shapes.water.positions)
 
 
@@ -881,38 +770,11 @@ class Project_Scene extends Scene_Component
 
         this.draw_skybox(graphics_state);
 
-        this.draw_ink(graphics_state, this.ink_t);
-        //DRAW SMOKE//
-        /*
-        if (this.smoke_counter == 13)
-            this.smoke_counter = 0;
-
-        if(this.smoke_update)
+        if(this.octo_sinking && !this.ctx_drawn)
         {
-            this.smoke_counter += 1;
-            this.smoke_update = false;
+            this.draw_gameOver();
+            clearTimeout(this.timer);  //stops time
         }
-        else
-            this.smoke_update = true;
-
-         var smoke_str = "assets/Smoke/" + this.smoke_counter.toString() +  ".png";
-
-         var smoke_transform = Mat4.identity().times(Mat4.translation([0,0,10])).times(Mat4.scale([3,3,0]))
-         if(!this.gif_ready_smoke)
-         {
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}) );
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
-         }
-         else
-         {
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}));
-         }
-         //console.log(smoke_str)
-*/
 
 
       }//end of display
