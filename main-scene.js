@@ -278,7 +278,7 @@ class Project_Scene extends Scene_Component
 
         //for text on display
         this.ctx_2d = text_canvas.getContext("2d");
-        //this.isGameOver = false;
+        this.isGameOver = false;
         this.minutes = 0;
         this.seconds = 0;
         this.timer = setTimeout( () => {this.addTime();}, 1000 );  //adds time after 1s
@@ -297,8 +297,7 @@ class Project_Scene extends Scene_Component
         this.go_right = false;
         this.octo_velocity = Vec.of(0,0,0);
 
-        //INK location
-        this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5]));
+
 
         //SHARKs location
         this.shark_t = [Mat4.identity().times(Mat4.translation([5,5,1.25])),
@@ -337,7 +336,7 @@ class Project_Scene extends Scene_Component
 
         //for smoke//
         this.smoke_counter = 0;
-        this.smoke_update = true;
+        this.smoke_update = false;
         this.gif_ready_smoke = false;
         setTimeout( () => { this.gif_ready_smoke = true; }, 200000 );
         for(var i = 0; i < 14; i++)
@@ -345,6 +344,12 @@ class Project_Scene extends Scene_Component
             var img = new Image();
             img.src = "assets/Smoke/" + i + ".png";
         }
+        //INK location
+        this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,-500,-this.height]));
+        this.do_draw_ink = false;
+
+        //bottom left game Instructions
+
 
 
 
@@ -444,14 +449,13 @@ class Project_Scene extends Scene_Component
       } //end of constructor
 
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-      { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
-        this.new_line();
+      {
         this.key_triggered_button( "Go Forward", [ "s" ], () => this.go_forward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_forward = false);
         this.key_triggered_button( "Go Backward", [ "w" ],() => this.go_backward = true, '#'+Math.random().toString(9).slice(-6), () => this.go_backward = false);
         this.key_triggered_button( "Go Left", [ "a" ], () => this.go_left = true, '#'+Math.random().toString(9).slice(-6), () => this.go_left = false);
         this.key_triggered_button( "Go Right", [ "d" ],() => this.go_right = true, '#'+Math.random().toString(9).slice(-6), () => this.go_right = false);
         this.new_line();
-        this.key_triggered_button("Ink", [" "], () => this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5])), () => this.smoke_update = true, () => this.number_of_inks ++);
+        this.key_triggered_button("Ink", [" "], () =>  this.ink_t = this.octopus_t.times(Mat4.scale([3,3,0])).times(Mat4.translation([3,0,5])), '#'+Math.random().toString(9).slice(-6) , () => this.number_of_inks++);
       }
 
     update_scene(graphics_state, dt)
@@ -557,8 +561,8 @@ class Project_Scene extends Scene_Component
 
     collision_detection(graphics_state, shark)
     {
-        var octo_circ = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], radius: 4}
-        var shark_circ = {x:shark[0], y:shark[1], radius: 4}
+        var octo_circ = {x:this.octopus_t[0][3], y:this.octopus_t[1][3], radius: 5}
+        var shark_circ = {x:shark[0], y:shark[1], radius: 2}
 
         //console.log(shark)
         //this.shapes.hitbox.draw(graphics_state, this.octopus_t.times(Mat4.scale(Vec.of(10,10,0))),
@@ -587,8 +591,8 @@ class Project_Scene extends Scene_Component
     }
 
     collision_detection_ink(graphics_state, shark, shark_num){
-      var shark_circ = {x:shark[0], y:shark[1], radius: 4}
-      var ink_circ = {x:this.ink_t[0][3], y:this.ink_t[1][3], radius: 4}
+      var shark_circ = {x:shark[0], y:shark[1], radius: 2}
+      var ink_circ = {x:this.ink_t[0][3], y:this.ink_t[1][3], radius: 3}
 
       var dx = ink_circ.x - shark_circ.x;
       var dy = ink_circ.y - shark_circ.y;
@@ -725,6 +729,7 @@ class Project_Scene extends Scene_Component
         this.ctx_2d.fillText(timeText, 1000, 50);
     }
 
+
     draw_kills(color, clear = true)
     {
         var text = "kills: " + this.shark_kills;
@@ -734,15 +739,21 @@ class Project_Scene extends Scene_Component
         this.ctx_2d.fillStyle= color;
         this.ctx_2d.font = "18px PixelFont";
         this.ctx_2d.fillText(text, 100, 50);
-        this.ctx_2d.font = "14px PixelFont";
-        this.ctx_2d.fillText("Help the Octopus survive!", 150, 520);
-        this.ctx_2d.fillText("Ink when in front", 150, 550);
-        this.ctx_2d.fillText("of the Sharks", 150, 580);
+
+    }
+
+    draw_instructions(color)
+    {
+      this.ctx_2d.fillStyle = color;
+      this.ctx_2d.font = "14px PixelFont";
+      this.ctx_2d.fillText("Help the Octopus survive!", 150, 520);
+      this.ctx_2d.fillText("Ink when in front", 150, 550);
+      this.ctx_2d.fillText("of the Sharks", 150, 580);
     }
 
     draw_gameOver()
     {
-        //this.isGameOver = true;
+
         this.ctx_2d.fillStyle = "rgba(0.5,0.5,0.5,0.2)";
         this.ctx_2d.fillRect(0,0,1080,600);
         this.ctx_2d.strokeRect(0,0,1080,600);
@@ -763,6 +774,7 @@ class Project_Scene extends Scene_Component
         this.ctx_2d.fillText("shots fired - " + this.number_of_inks, 540, 440);
         let accuracy = this.number_of_inks == 0 ? "N/A" : parseInt(100*this.shark_kills/this.number_of_inks) + "%"
                  this.ctx_2d.fillText("accuracy - " + accuracy, 540, 460);
+        this.isGameOver = true;
     }
 
     //water simulation
@@ -804,15 +816,13 @@ class Project_Scene extends Scene_Component
         this.shapes.water.send_water(this.gl);
         this.shapes.tankedge.draw(graphics_state, Mat4.identity().times(Mat4.translation([this.width/2,this.length/2,1.6])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width/2, 1.5, this.length/2])), this.materials.edge_material);
 
-
-
         //this already draws octopus and sharks
         this.update_scene(graphics_state, this.time);
 
         for(var i = 0; i < this.shark_t.length; i++)
         {
             var shark_pos = Vec.of(this.shark_t[i][0][3],this.shark_t[i][1][3],this.shark_t[i][2][3]);
-            if(this.is_sunk[i] == false){
+            if(this.is_sunk[i] == false && !this.isGameOver){
             this.collision_detection_ink(graphics_state, shark_pos, i);
             this.collision_detection(graphics_state, shark_pos);
             }
@@ -822,7 +832,7 @@ class Project_Scene extends Scene_Component
         if(this.shark_kills)
           this.draw_kills("#595751");
 
-
+        this.draw_instructions("#595751");
 
         //DRAW CAUSTICS//
         if (this.caustic_counter >= 99)
@@ -883,38 +893,12 @@ class Project_Scene extends Scene_Component
 
         this.draw_skybox(graphics_state);
 
+
+
         this.draw_ink(graphics_state, this.ink_t);
-        //DRAW SMOKE//
-        /*
-        if (this.smoke_counter == 13)
-            this.smoke_counter = 0;
 
-        if(this.smoke_update)
-        {
-            this.smoke_counter += 1;
-            this.smoke_update = false;
-        }
-        else
-            this.smoke_update = true;
 
-         var smoke_str = "assets/Smoke/" + this.smoke_counter.toString() +  ".png";
 
-         var smoke_transform = Mat4.identity().times(Mat4.translation([0,0,10])).times(Mat4.scale([3,3,0]))
-         if(!this.gif_ready_smoke)
-         {
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}) );
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
-         }
-         else
-         {
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material);
-
-            this.shapes.smoke.draw( graphics_state, smoke_transform, this.materials.smoke_material.override({texture: this.context.get_instance(smoke_str,true)}));
-         }
-         //console.log(smoke_str)
-*/
 
 
       }//end of display
