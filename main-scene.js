@@ -302,11 +302,13 @@ class Project_Scene extends Scene_Component
 
         //SHARKs location
         this.shark_t = [Mat4.identity().times(Mat4.translation([5,5,1.25])),
-        Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25]))
+        Mat4.identity().times(Mat4.translation([this.width-5,this.length-5,1.25])),
+        Mat4.identity().times(Mat4.translation([this.width-5,5,1.25])),
+        Mat4.identity().times(Mat4.translation([5,this.length-5,1.25])),
         ];
-        this.shark_bounce = [0,0]
-        this.shark_velocity = [Vec.of(.25, 0, 0),Vec.of(.25, 0, 0)]
-        this.is_sunk = [false,false]
+        this.shark_bounce = [0,0,0,0]
+        this.shark_velocity = [Vec.of(.4, 0, 0),Vec.of(.25, 0, 0),Vec.of(.4, 0, 0),Vec.of(.25, 0, 0)]
+        this.is_sunk = [false,false,false,false]
 
         //random z for water (peaks and troughs)
         for(var i=0; i< this.rows; i++)
