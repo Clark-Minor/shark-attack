@@ -215,28 +215,6 @@ class Shark extends Shape
       }
 }
 
-class Texture_Caustic extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-      return `
-        uniform sampler2D texture;
-        void main()
-        { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-          { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-            return;
-          }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-                                            // Phong shading is not to be confused with the Phong Reflection Model.
-
-          vec4 tex_color = texture2D( texture, f_tex_coord);                         // Sample the texture image in the correct place.
-          vec3 bumped_N = normalize( N + tex_color.rgb - 0.5 * vec3(1,1,1) );
-
-                                                                                     // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( bumped_N );                     // Compute the final color with contributions from lights.
-        }`;
-    }
-}
 
 
 
@@ -251,16 +229,16 @@ window.Project_Scene = window.classes.Project_Scene =
 class Project_Scene extends Scene_Component
   { constructor( context, control_box, gl, text_canvas )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
-        if( !context.globals.has_controls   )
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );
+        /*if( !context.globals.has_controls   )
+          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell(), text_canvas ) );*/
 
         //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,0,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
-        context.globals.graphics_state.camera_transform = Mat4.translation([ 0,0,-50 ])
-                                                    .times(Mat4.translation([ 0,-25,0 ]))
-                                                    .times(Mat4.translation([ -20,0,0 ]))
-                                                    .times(Mat4.rotation(-1.2, Vec.of(1,0,0)))
-                                                    .times(Mat4.rotation(Math.PI/5, Vec.of(0,0,1)))
+        context.globals.graphics_state.camera_transform = Mat4.translation([ 0,0,-50 ])    //forward backward  
+                                                    .times(Mat4.translation([ 0,-25,0 ]))  //up down, -25
+                                                    .times(Mat4.translation([ -19,0,0 ]))  //left right,-20
+                                                    .times(Mat4.rotation(-1.2, Vec.of(1,0,0)))  //angle up down
+                                                    .times(Mat4.rotation(Math.PI/5, Vec.of(0,0,1)))  //angle sides
                                                     //.times(Mat4.rotation(Math.PI/4, Vec.of(0,1,0)));
 
         const r = context.width/context.height;
@@ -272,7 +250,7 @@ class Project_Scene extends Scene_Component
         this.width = 95;  //x
         this.length = 70; //y
         this.height = 20; //z
-        this.Height_Map = [];
+        this.flow_height = [];
         this.time = 0;
         this.gl = gl;
 
@@ -320,7 +298,7 @@ class Project_Scene extends Scene_Component
             else
                 Row.push(0);
           }
-          this.Height_Map.push(Row);
+          this.flow_height.push(Row);
         }
 
         //for caustics//
@@ -350,12 +328,12 @@ class Project_Scene extends Scene_Component
 
         //bottom left game Instructions
 
-
+        this.isDrawInstr = true;
 
 
         this.shapes = {  axis: new Axis_Arrows(),
 
-                         water: new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.Height_Map),
+                         water: new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.flow_height),
                          caustic: new Square(),
                          tank: new Body_Of_Water(),
                          tankedge: new Edge_Of_Tank(),
@@ -413,7 +391,7 @@ class Project_Scene extends Scene_Component
 
             pupil_material: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 0.8}),
 
-            caustic_material: context.get_instance( Texture_Caustic ).material(Color.of( 0,0,0,1 ),
+            caustic_material: context.get_instance( Phong_Shader ).material(Color.of( 0,0,0,1 ),
             {
                   ambient: 0.4,
                   texture: context.get_instance("assets/Caustic/target-0.png",true)
@@ -528,7 +506,7 @@ class Project_Scene extends Scene_Component
         this.shark_t[i].times(Mat4.translation(this.shark_velocity[i]));
 
         var bounce_angle = Math.random() * 1.5 - .75;
-        console.log(bounce_angle + Math.PI);
+        //console.log(bounce_angle + Math.PI);
         if(this.shark_t[i][0][3] > this.width - 5)
         {
           this.shark_t[i][0][3] = this.width - 5;
@@ -570,7 +548,7 @@ class Project_Scene extends Scene_Component
         // this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(Mat4.translation(Vec.of(95,0,0))).times(Mat4.scale(Vec.of(10,10,0))),this.materials.shark_material);
 
         // this.shapes.hitbox.draw(graphics_state, Mat4.identity().times(this.shark_t[0]).times(Mat4.scale(Vec.of(2,2,0))), this.materials.octopus_skin)
-        console.log(this.shark_bounce[1])
+        //console.log(this.shark_bounce[1])
         //console.log(this.shark)
         var rotate_head = Mat4.rotation(this.shark_bounce[1],Vec.of(0,0,1))
         var translate_head = Mat4.translation(Vec.of(this.shark_t[1][0][0]*4,this.shark_t[1][0][1]*4,0))
@@ -746,9 +724,10 @@ class Project_Scene extends Scene_Component
     {
       this.ctx_2d.fillStyle = color;
       this.ctx_2d.font = "14px PixelFont";
-      this.ctx_2d.fillText("Help the Octopus survive!", 150, 520);
-      this.ctx_2d.fillText("Ink when in front", 150, 550);
-      this.ctx_2d.fillText("of the Sharks", 150, 580);
+      this.ctx_2d.fillText("Help the Octopus survive!", 40, 520);
+      this.ctx_2d.fillText("Ink when in front", 40, 550);
+      this.ctx_2d.fillText("of the Sharks", 40, 580);
+      this.isDrawInstr = false;
     }
 
     draw_gameOver()
@@ -771,7 +750,7 @@ class Project_Scene extends Scene_Component
         this.ctx_2d.font = "14px PixelFont";
         this.ctx_2d.fillText("time - " + this.get_timeText(), 540, 400);
         this.ctx_2d.fillText("kills - " + this.shark_kills, 540, 420);
-        this.ctx_2d.fillText("shots fired - " + this.number_of_inks, 540, 440);
+        this.ctx_2d.fillText("number of inks - " + this.number_of_inks, 540, 440);
         let accuracy = this.number_of_inks == 0 ? "N/A" : parseInt(100*this.shark_kills/this.number_of_inks) + "%"
                  this.ctx_2d.fillText("accuracy - " + accuracy, 540, 460);
         this.isGameOver = true;
@@ -787,7 +766,7 @@ class Project_Scene extends Scene_Component
           let phase = i * (2*Math.PI / this.rows);
           let phase2 = j * (2*Math.PI / this.columns);
           if(i > 0 & i < this.rows-1 && j > 0 & j < this.columns-1)  //so edges not jagged
-              this.Height_Map[i][j] = this.Height_Map[i][j] - 0.05*Math.sin(phase + phase2 + 4.5*this.time);
+              this.flow_height[i][j] = this.flow_height[i][j] - 0.05*Math.sin(phase + phase2 + 4.5*this.time);
         }
     }
 
@@ -812,7 +791,7 @@ class Project_Scene extends Scene_Component
 
 
         //CREATE NEW WATER SHAPE
-        this.shapes.water = new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.Height_Map);
+        this.shapes.water = new ( Water.prototype.make_flat_shaded_version() )(this.rows, this.columns, this.width, this.length, this.flow_height);
         this.shapes.water.send_water(this.gl);
         this.shapes.tankedge.draw(graphics_state, Mat4.identity().times(Mat4.translation([this.width/2,this.length/2,1.6])).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0))).times(Mat4.scale([this.width/2, 1.5, this.length/2])), this.materials.edge_material);
 
@@ -832,7 +811,8 @@ class Project_Scene extends Scene_Component
         if(this.shark_kills)
           this.draw_kills("#595751");
 
-        this.draw_instructions("#595751");
+        if(this.isDrawInstr)
+            this.draw_instructions("#595751");
 
         //DRAW CAUSTICS//
         if (this.caustic_counter >= 99)
