@@ -1,6 +1,6 @@
-# Shark Graveyard
+# Shark Attack
 
-A one-player game featuring an octopus and sharks in moving water, where the goal is to protect the octopus from the predatory sharks by moving around and inking them.
+A one-player game featuring an octopus in an octo-shark tank of moving water. The goal is to protect the octopus from 8 predatory sharks by moving around and inking them. 
 
 ## Directions
 
@@ -20,4 +20,4 @@ Clark Minor: Prototype octopus shape by creating a new class Half_Torus for each
 Andrew Piro:
 
 ## Note:
-Water caustics has no problem rendering the still image, but animation takes some time.
+Water caustics has no problem rendering the first frame, but loading the other frames require high processing power.
