@@ -17,7 +17,7 @@ Shelley Pi: Created the models for skybox, tank, shark, and water surface. Simul
 
 Clark Minor: Prototype octopus shape by creating a new class Half_Torus for each of the legs. Implement button controls for controlling the velocity of the octopus and random velocity for each shark. Help implement logic for collision detection between octopus, sharks, walls, and ink clouds.
 
-Andrew Piro:
+Andrew Piro: Helped implemented logic for collision detection between octopus, sharks, walls, and ink clouds. Implemented logic for processing player input and applying the appropriate velocity to the octopus. Created the logic to process shark collisions with walls, and to bounce the sharks at a semi-random angle.
 
 ## Note:
 Water caustics has no problem rendering the still image, but animation takes some time.
