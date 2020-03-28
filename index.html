@@ -1,8 +1,8 @@
 <!-- Graphics Example Code.  index.html - The web page document containing the canvas (drawing surface), that launches your javascript files. //-->
-<!DOCTYPE html> <html> <head> <meta charset="UTF-8"/> <link rel="icon" href="assets/fav.ico">
+<!DOCTYPE html> <html> <title>Shark Attack</title> <head> <meta charset="UTF-8"/> <link rel="icon" href="assets/fav.ico">
 <script> window.tiny_graphics = {};             // Store all our JavaScipt code inside of classes here.
-         window.classes = {}                    
-         </script>        
+         window.classes = {}
+         </script>
 <script src="tiny-graphics.js" ></script>  <!--  Javascript "include" files.  Any code in them gets executed as part of the page loading. //-->
 <script src= "dependencies.js" ></script>
 <script src=   "main-scene.js" ></script>
@@ -15,8 +15,8 @@
   body { background: DarkGray }
   div { background: white }
   canvas { width: 1080px; height: 600px; margin-bottom:-3px}
-  #main-canvas canvas { z-index: 1 } 
-  #text-canvas canvas{ position: absolute; top: 7px; left: 7px; width: 1080px; height: 600px; margin-bottom:-3px; z-index:0 } 
+  #main-canvas canvas { z-index: 1 }
+  #text-canvas canvas{ position: absolute; top: 7px; left: 7px; width: 1080px; height: 600px; margin-bottom:-3px; z-index:0 }
   .canvas-widget { width: 1080px; background: DimGray }
   table { border-collapse: collapse; display:block; overflow-x: auto; }
   table.control-box { width: 1080px; border:0; margin:0; max-height:380px; transition:.5s; overflow-y:scroll; background:DimGray }
@@ -39,11 +39,11 @@
 
 <div id="main-canvas" class="canvas-widget"></div>
 <div id="text-canvas" class="canvas-widget"></div>
-<script> "use strict"     // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE ********************* 
+<script> "use strict"     // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
                                            // Use this code to embed a widget into any web page.  The widget inclues a 3D WebGL area
                                            // (an HTML canvas) and various panels of controls.
   const scenes = [ "Project_Scene" ]; // First, list the names of scenes we will add to our canvas.  These will register themselves
-                                           // with this widget's Canvas_Manager so that their code can be called upon every time a 
+                                           // with this widget's Canvas_Manager so that their code can be called upon every time a
                                            // draw / keyboard / mouse event happens on the web page.
   new Canvas_Widget( "main-canvas", "text-canvas", scenes );             // Use the Canvas_Widget class to display the WebGL demo.  Pass in
                                                           // the name of the HTML element we are to replace with the widget.
