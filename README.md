@@ -1,15 +1,17 @@
 # Shark Attack
 
-A one-player game featuring an octopus in an octo-shark tank of moving water. The goal is to protect the octopus from 8 predatory sharks by moving around and inking them. 
+A one-player game featuring an octopus and several sharks in a tank of moving water. The goal is to protect the octopus from 8 predatory sharks by moving around and inking them. You win the game after all of the sharks have been successfully inked. You lose if you get hit (eaten) by a shark. The sharks all swim at different speeds, so you better move quick!!!
 
 ## Directions
+
+Go to https://clark-minor.github.io/shark-attack/ to play.
 
 Keyboard input:
 Press 's' to move the octopus foward,
 'w' to move backward,
 'a' to move left, and
 'd' to move right.
-Press ' ' to ink.
+Press the spacebar to ink.
 
 ## Member Contributions
 
